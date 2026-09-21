@@ -1,0 +1,63 @@
+name: SIGMA V441 right-half deterministic bisect
+on:
+  push:
+    branches: [diag/v441-isolation-20260921]
+jobs:
+  bisect-right:
+    strategy:
+      fail-fast: false
+      matrix:
+        side: [left, right]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install exact diagnostic environment
+        shell: pwsh
+        run: |
+          python -m venv .diagvenv
+          .\.diagvenv\Scripts\python.exe -m pip install --upgrade pip
+          .\.diagvenv\Scripts\python.exe -m pip install -r requirements.txt
+          .\.diagvenv\Scripts\python.exe -m pip install -r requirements-build.txt
+      - name: Build subset and run direct pytest
+        shell: pwsh
+        run: |
+          $py = "$PWD\.diagvenv\Scripts\python.exe"
+          $raw = & $py -m pytest --collect-only -q --disable-warnings
+          $ids = @()
+          foreach ($line in $raw) {
+            $s = ([string]$line).Trim()
+            if ($s -match "^(tests/[^\s]+::[^\s]+)$") { $ids += $matches[1] }
+          }
+          $v441 = "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          $vindex = [Array]::IndexOf($ids,$v441)
+          if ($vindex -lt 0) { throw "V441 not found" }
+          $pre = @($ids[0..($vindex-1)])
+          $right = @($pre[[math]::Floor($pre.Count/2)..($pre.Count-1)])
+          $mid = [math]::Floor($right.Count/2)
+          if ("${{ matrix.side }}" -eq "left") {
+            $subset = @($right[0..($mid-1)])
+          } else {
+            $subset = @($right[$mid..($right.Count-1)])
+          }
+          $subset += $v441
+          "side=${{ matrix.side }}" | Out-File subset-result.txt -Encoding utf8
+          "predecessor_count=$($subset.Count-1)" | Out-File subset-result.txt -Append -Encoding utf8
+          $subset | Out-File subset-nodeids.txt -Encoding utf8
+          & $py -m pytest -q --disable-warnings --junitxml="junit-${{ matrix.side }}.xml" @subset
+          $code = $LASTEXITCODE
+          "exit=$code" | Out-File subset-result.txt -Append -Encoding utf8
+          exit $code
+      - name: Upload subset evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v441-right-half-${{ matrix.side }}
+          path: |
+            subset-result.txt
+            subset-nodeids.txt
+            junit-${{ matrix.side }}.xml
+          if-no-files-found: warn

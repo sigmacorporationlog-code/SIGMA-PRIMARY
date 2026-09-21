@@ -32,7 +32,7 @@ jobs:
       # sans ceci, le job échoue à "No module named pytest" avant même
       # d'avoir touché au code de SIGMA lui-même.
       - run: pip install -r requirements-build.txt
-      - run: python scripts/release_gate.py
+      - run: python -m scripts.release_gate
       - run: python -m compileall -q app scripts
 
   windows-build:

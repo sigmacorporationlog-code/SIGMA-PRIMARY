@@ -31,10 +31,33 @@ if "UPX" in spec.upper() and "upx=False" not in spec:
 # le bootloader relance un processus enfant que le SCM ne surveille pas.
 if "COLLECT(" not in spec:
     raise SystemExit("sigma.spec must build a onedir package (COLLECT) for the Windows service")
+version_src = (ROOT / "app/core/version.py").read_text(encoding="utf-8")
 config_src = (ROOT / "app/core/config.py").read_text(encoding="utf-8")
-for field in ("APP_VERSION", "RELEASE_VERSION"):
-    if f'{field}: str = "{version}"' not in config_src:
-        raise SystemExit(f"app/core/config.py: {field} does not match release.json ({version})")
+
+# app/core/version.py is the code-level projection of release.json and is the
+# single source of truth consumed by Settings. Keep the release gate aligned
+# with that architecture instead of requiring duplicated literal versions.
+if "APP_VERSION = str(RELEASE[\"release\"])" not in version_src:
+    raise SystemExit("app/core/version.py must derive APP_VERSION from release.json")
+try:
+    from app.core.version import APP_VERSION as source_app_version
+except Exception as exc:
+    raise SystemExit(f"impossible de charger la version applicative: {exc}") from exc
+if str(source_app_version).strip() != version:
+    raise SystemExit(
+        f"app/core/version.py APP_VERSION ({source_app_version}) != release.json ({version})"
+    )
+
+expected_bindings = {
+    "APP_VERSION": "APP_VERSION",
+    "RELEASE_VERSION": "APP_VERSION",
+}
+for field, binding in expected_bindings.items():
+    if f"{field}: str = {binding}" not in config_src:
+        raise SystemExit(
+            f"app/core/config.py: {field} must derive from app.core.version.APP_VERSION"
+        )
+
 if f'#define MyAppVersion "{version}"' not in installer:
     raise SystemExit("installer/SIGMA-Setup.iss fallback version does not match release.json")
 print(f"SIGMA release gate OK: {version}")

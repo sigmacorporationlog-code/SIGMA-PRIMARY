@@ -1,0 +1,69 @@
+name: SIGMA V441 exact-build-env verification
+on:
+  push:
+    branches: [diag/v441-isolation-20260921]
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Reproduce build_windows environment
+        shell: pwsh
+        run: |
+          $root = $PWD
+          $version = (Get-Content "$root\release.json" -Raw | ConvertFrom-Json).release
+          $buildRoot = "$root\build\commercial_$version"
+          $venv = "$buildRoot\.venv"
+          New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
+          & python -m venv $venv
+          & "$venv\Scripts\python.exe" -m pip install --upgrade pip wheel
+          & "$venv\Scripts\python.exe" -m pip install -r "$root\requirements.txt"
+          & "$venv\Scripts\python.exe" -m pip install -r "$root\requirements-build.txt"
+          & "$venv\Scripts\python.exe" -m pip install "pyinstaller>=6.22,<7"
+      - name: Collect exact node order
+        shell: pwsh
+        run: |
+          $py = "$PWD\build\commercial_4.46.0\.venv\Scripts\python.exe"
+          & $py -m pytest --collect-only -q --disable-warnings | Set-Content collected.txt -Encoding utf8
+          $ids = @()
+          foreach ($line in Get-Content collected.txt) {
+            $s = ([string]$line).Trim()
+            if ($s -match "^(tests/[^\s]+::[^\s]+)$") { $ids += $matches[1] }
+          }
+          $v441 = "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          $idx = [Array]::IndexOf($ids,$v441)
+          if ($idx -lt 0) { throw "V441 not found" }
+          $pre = @($ids[0..($idx-1)])
+          $pre | Set-Content predecessors.txt -Encoding utf8
+          "count=$($pre.Count)" | Set-Content verification.txt -Encoding utf8
+      - name: V441 alone in exact build environment
+        shell: pwsh
+        run: |
+          $py = "$PWD\build\commercial_4.46.0\.venv\Scripts\python.exe"
+          & $py -m pytest -vv -s --disable-warnings tests/test_v441_update_agent.py::test_update_manifest_generator
+          $code=$LASTEXITCODE; "v441_exit=$code" | Add-Content verification.txt
+          exit $code
+      - name: Full predecessors plus V441 in exact build environment
+        shell: pwsh
+        run: |
+          $py = "$PWD\build\commercial_4.46.0\.venv\Scripts\python.exe"
+          $nodes = Get-Content predecessors.txt
+          $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          & $py -m pytest -q --junitxml="$PWD\exact-build-env.xml" @nodes
+          $code=$LASTEXITCODE; "full230_exit=$code" | Add-Content verification.txt
+          exit $code
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v441-exact-build-env-verification
+          path: |
+            verification.txt
+            predecessors.txt
+            collected.txt
+            exact-build-env.xml
+          if-no-files-found: warn

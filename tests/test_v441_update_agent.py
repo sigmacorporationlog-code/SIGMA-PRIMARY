@@ -67,7 +67,7 @@ def test_update_manifest_generator(tmp_path):
     import subprocess, sys
     artifact = tmp_path / 'SIGMA-Server.exe'; artifact.write_bytes(b'abc')
     manifest = tmp_path / 'manifest.json'
-    subprocess.run([sys.executable, 'scripts/generate_update_manifest.py', str(artifact), '--version', '4.41.0', '--url', 'https://updates.example/SIGMA-Server.exe', '--output', str(manifest)], check=True)
+    subprocess.run([sys.executable, 'scripts/generate_update_manifest.py', str(artifact), '--version', '4.41.0', '--url', 'https://updates.example/SIGMA-Server.exe', '--output', str(manifest)], check=True, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
     data=json.loads(manifest.read_text(encoding='utf-8'))
     assert data['sha256']==hashlib.sha256(b'abc').hexdigest()
     assert data['size_bytes']==3
