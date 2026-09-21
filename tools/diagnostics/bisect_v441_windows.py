@@ -11,7 +11,7 @@ def run(cmd, timeout=180):
     try:
         p=subprocess.run(cmd,cwd=ROOT,text=True,capture_output=True,timeout=timeout)
         return {"exit_code":p.returncode,"duration":time.monotonic()-t,
-                "stdout":p.stdout[-12000:],"stderr":p.stderr[-12000:],"timed_out":False}
+                "stdout":p.stdout,"stderr":p.stderr,"timed_out":False}
     except subprocess.TimeoutExpired as e:
         return {"exit_code":None,"duration":time.monotonic()-t,
                 "stdout":str(e.stdout or "")[-12000:],"stderr":str(e.stderr or "")[-12000:],
