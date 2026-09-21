@@ -81,27 +81,30 @@ jobs:
         run: |
           $nodes = Get-Content V441_PREDECESSORS.txt
           $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
-          python -m pytest -q --junitxml direct-exact-full-1.xml @nodes
-          "exit=$LASTEXITCODE" | Out-File direct-exact-full-1.txt -Encoding utf8
-          exit 0
+          & python -m pytest -q --junitxml direct-exact-full-1.xml @nodes
+          $code = $LASTEXITCODE
+          "exit=$code" | Set-Content direct-exact-full-1.txt -Encoding utf8
+          exit $code
       - name: Direct exact full suite run 2
         shell: pwsh
         continue-on-error: true
         run: |
           $nodes = Get-Content V441_PREDECESSORS.txt
           $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
-          python -m pytest -q --junitxml direct-exact-full-2.xml @nodes
-          "exit=$LASTEXITCODE" | Out-File direct-exact-full-2.txt -Encoding utf8
-          exit 0
+          & python -m pytest -q --junitxml direct-exact-full-2.xml @nodes
+          $code = $LASTEXITCODE
+          "exit=$code" | Set-Content direct-exact-full-2.txt -Encoding utf8
+          exit $code
       - name: Direct exact full suite run 3
         shell: pwsh
         continue-on-error: true
         run: |
           $nodes = Get-Content V441_PREDECESSORS.txt
           $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
-          python -m pytest -q --junitxml direct-exact-full-3.xml @nodes
-          "exit=$LASTEXITCODE" | Out-File direct-exact-full-3.txt -Encoding utf8
-          exit 0
+          & python -m pytest -q --junitxml direct-exact-full-3.xml @nodes
+          $code = $LASTEXITCODE
+          "exit=$code" | Set-Content direct-exact-full-3.txt -Encoding utf8
+          exit $code
       - name: Upload diagnostic evidence
         if: always()
         uses: actions/upload-artifact@v4
