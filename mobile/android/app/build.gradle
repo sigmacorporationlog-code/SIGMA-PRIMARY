@@ -1,0 +1,75 @@
+plugins {
+    id 'com.android.application'
+}
+
+def sigmaReleaseManifest = new groovy.json.JsonSlurper().parse(rootProject.file('../../release.json'))
+def sigmaReleaseVersion = sigmaReleaseManifest.release.toString()
+def sigmaReleaseParts = sigmaReleaseVersion.tokenize('.')
+if (sigmaReleaseParts.size() != 3 || sigmaReleaseParts.any { !(it ==~ /\d+/) }) {
+    throw new GradleException("Invalid SIGMA release version: ${sigmaReleaseVersion}")
+}
+def sigmaVersionCode = sigmaReleaseParts[0].toInteger() * 10000 + sigmaReleaseParts[1].toInteger() * 100 + sigmaReleaseParts[2].toInteger()
+
+dependencies {
+    implementation 'androidx.core:core:1.15.0'
+}
+
+static String escapedProperty(Project project, String name, String fallback) {
+    def value = project.findProperty(name)?.toString() ?: fallback
+    return value.replace('\\', '\\\\').replace('"', '\\"')
+}
+
+android {
+    namespace 'com.sigma.school'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.sigma.school'
+        minSdk 24
+        targetSdk 35
+        versionCode sigmaVersionCode
+        versionName sigmaReleaseVersion
+        buildConfigField 'String', 'SIGMA_BASE_URL', '"' + escapedProperty(project, 'SIGMA_BASE_URL', 'https://sigma.invalid/') + '"'
+        buildConfigField 'String', 'SIGMA_APP_CHANNEL', '"' + escapedProperty(project, 'SIGMA_APP_CHANNEL', 'commercial') + '"'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            def storeFilePath = System.getenv('SIGMA_ANDROID_KEYSTORE')
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword System.getenv('SIGMA_ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('SIGMA_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('SIGMA_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            minifyEnabled false
+            shrinkResources false
+            if (System.getenv('SIGMA_ANDROID_KEYSTORE')) {
+                signingConfig signingConfigs.release
+            }
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packaging {
+        resources.excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE*', 'META-INF/NOTICE*']
+    }
+}

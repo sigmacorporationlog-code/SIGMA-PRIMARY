@@ -1,0 +1,114 @@
+name: SIGMA CI - Windows
+
+# Ce pipeline compile et publie UNIQUEMENT le serveur Windows (SIGMA-Server.exe
+# + l'installateur). Il ne dépend jamais de la partie Android : si
+# mobile/android échoue à compiler, ce pipeline continue et publie quand
+# même la release Windows. Voir ci-android.yml pour la partie mobile.
+#
+# Sur les pull requests, ce pipeline ne se déclenche pas si SEUL le dossier
+# mobile/ a changé (paths-ignore) — inutile de tester Windows pour une
+# modification purement Android. Sur push vers une branche ou un tag de
+# version, aucun filtre de chemin n'est appliqué : une release doit toujours
+# produire ses artefacts Windows, même si le commit qui porte le tag ne
+# touche (en apparence) que d'autres fichiers.
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    paths-ignore: ['mobile/**']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      # release_gate.py appelle pytest en interne (voir scripts/release_gate.py) :
+      # sans ceci, le job échoue à "No module named pytest" avant même
+      # d'avoir touché au code de SIGMA lui-même.
+      - run: pip install -r requirements-build.txt
+      - run: python scripts/release_gate.py
+      - run: python -m compileall -q app scripts
+
+  windows-build:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - shell: pwsh
+        run: python -m pip install --upgrade pip; pip install -r requirements.txt; pip install pyinstaller
+      - shell: pwsh
+        run: ./build_windows.ps1 -Clean
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigma-windows-server
+          path: dist/SIGMA-Server.exe
+          if-no-files-found: error
+
+  windows-installer:
+    needs: windows-build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Install Python dependencies and PyInstaller
+        shell: pwsh
+        run: python -m pip install --upgrade pip; pip install -r requirements.txt; pip install pyinstaller
+      - name: Build SIGMA-Server.exe
+        shell: pwsh
+        run: ./build_windows.ps1 -Clean
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+      - name: Build SIGMA Setup
+        shell: pwsh
+        run: |
+          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" installer\SIGMA-Setup.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup a échoué (code $LASTEXITCODE)." }
+      - name: Nommer l'installateur indépendamment du numéro de version
+        # installer/SIGMA-Setup.iss lit release.json et sort
+        # release_out\<version>\SIGMA-<version>-Setup.exe. On le recopie ici
+        # sous un nom fixe pour que ce workflow n'ait jamais besoin d'être
+        # modifié à chaque changement de version (source du bug corrigé le
+        # 20/09/2026 : le chemin "release_out/4.46.0/..." était codé en dur
+        # et se serait cassé dès la prochaine version).
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path release_out -Recurse -Filter 'SIGMA-*-Setup.exe' | Select-Object -First 1
+          if (-not $installer) { throw "Installateur introuvable sous release_out\" }
+          Copy-Item $installer.FullName 'release_out/SIGMA-Setup.exe'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigma-windows-installer
+          path: release_out/SIGMA-Setup.exe
+          if-no-files-found: error
+
+  release-windows:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows-build, windows-installer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: sigma-windows-server, path: release_out}
+      - uses: actions/download-artifact@v4
+        with: {name: sigma-windows-installer, path: release_out}
+      - uses: softprops/action-gh-release@v2
+        with:
+          # tag_name explicite : si la release existe déjà (par ex. créée
+          # entretemps par ci-android.yml sur le même tag), ces fichiers
+          # Windows s'y ajoutent au lieu d'écraser ou d'entrer en conflit.
+          tag_name: ${{ github.ref_name }}
+          files: |
+            release_out/SIGMA-Server.exe
+            release_out/SIGMA-Setup.exe
+          generate_release_notes: true

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icône de notification (barre de statut Android), distincte de l'icône de
+  lanceur (mipmap/ic_launcher). Contrainte Android : une icône de
+  notification doit être un pictogramme simple en une seule couleur pleine
+  sur fond transparent — le système applique lui-même la teinte (blanc,
+  gris...) selon le thème ; un logo en dégradé multicolore n'y est pas
+  utilisable (il serait remplacé par un carré plein ou mal rendu).
+  Forme : lettre grecque Sigma (Σ) stylisée, cohérente avec le symbole de la
+  charte graphique SIGMA, simplifiée pour rester lisible en 24dp. Le blanc
+  fixe convient à ce cas d'usage : NotificationCompat/Android recolore de
+  toute façon cette icône dans la barre de statut selon le thème système.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M5,4 L19,4 L19,7 L9.5,7 L15,11.3 L15,12.7 L9.5,17 L19,17 L19,20 L5,20 L5,16.3 L11.8,11 L5,7.7 Z" />
+</vector>

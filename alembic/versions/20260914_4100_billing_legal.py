@@ -1,0 +1,31 @@
+"""SIGMA V4.1 billing and legal acceptance layer."""
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy import inspect
+revision='20260914_4100'
+down_revision='20260914_4000'
+branch_labels=None
+depends_on=None
+
+def upgrade():
+    bind=op.get_bind(); insp=inspect(bind); tables=set(insp.get_table_names())
+    if 'subscription_invoices' not in tables:
+        op.create_table('subscription_invoices',
+            sa.Column('id',sa.Integer(),primary_key=True), sa.Column('school_id',sa.Integer(),sa.ForeignKey('schools.id'),nullable=False), sa.Column('subscription_id',sa.Integer(),sa.ForeignKey('school_subscriptions.id'),nullable=False), sa.Column('invoice_number',sa.String(80),nullable=False,unique=True), sa.Column('period_start',sa.Date(),nullable=False), sa.Column('period_end',sa.Date(),nullable=False), sa.Column('amount_xaf',sa.Integer(),nullable=False), sa.Column('currency',sa.String(3),nullable=False,server_default='XAF'), sa.Column('status',sa.String(30),nullable=False,server_default='issued'), sa.Column('due_on',sa.Date(),nullable=False), sa.Column('paid_at',sa.DateTime(timezone=True),nullable=True), sa.Column('notes',sa.Text(),nullable=True), sa.Column('created_at',sa.DateTime(timezone=True)), sa.Column('updated_at',sa.DateTime(timezone=True)))
+        op.create_index('ix_subscription_invoices_school_id','subscription_invoices',['school_id']); op.create_index('ix_subscription_invoices_subscription_id','subscription_invoices',['subscription_id']); op.create_index('ix_subscription_invoices_invoice_number','subscription_invoices',['invoice_number'])
+    if 'subscription_payments' not in tables:
+        op.create_table('subscription_payments',sa.Column('id',sa.Integer(),primary_key=True),sa.Column('school_id',sa.Integer(),sa.ForeignKey('schools.id'),nullable=False),sa.Column('invoice_id',sa.Integer(),sa.ForeignKey('subscription_invoices.id'),nullable=False),sa.Column('amount_xaf',sa.Integer(),nullable=False),sa.Column('method',sa.String(40),nullable=False),sa.Column('provider_reference',sa.String(150),nullable=True),sa.Column('status',sa.String(30),nullable=False,server_default='pending'),sa.Column('paid_at',sa.DateTime(timezone=True),nullable=True),sa.Column('notes',sa.Text(),nullable=True),sa.Column('created_at',sa.DateTime(timezone=True)),sa.Column('updated_at',sa.DateTime(timezone=True)))
+        op.create_index('ix_subscription_payments_school_id','subscription_payments',['school_id']); op.create_index('ix_subscription_payments_invoice_id','subscription_payments',['invoice_id']); op.create_index('ix_subscription_payments_provider_reference','subscription_payments',['provider_reference'])
+    if 'legal_documents' not in tables:
+        op.create_table('legal_documents',sa.Column('id',sa.Integer(),primary_key=True),sa.Column('code',sa.String(80),nullable=False),sa.Column('version',sa.String(30),nullable=False),sa.Column('document_type',sa.String(50),nullable=False),sa.Column('title',sa.String(255),nullable=False),sa.Column('content',sa.Text(),nullable=False),sa.Column('content_hash',sa.String(64),nullable=False),sa.Column('effective_on',sa.Date(),nullable=False),sa.Column('expires_on',sa.Date(),nullable=True),sa.Column('is_active',sa.Boolean(),nullable=False,server_default=sa.true()),sa.Column('is_required',sa.Boolean(),nullable=False,server_default=sa.true()),sa.Column('created_at',sa.DateTime(timezone=True)),sa.Column('updated_at',sa.DateTime(timezone=True)),sa.UniqueConstraint('code','version',name='uq_legal_document_version'))
+        op.create_index('ix_legal_documents_code','legal_documents',['code']); op.create_index('ix_legal_documents_content_hash','legal_documents',['content_hash'])
+    if 'legal_acceptances' not in tables:
+        op.create_table('legal_acceptances',sa.Column('id',sa.Integer(),primary_key=True),sa.Column('school_id',sa.Integer(),sa.ForeignKey('schools.id'),nullable=False),sa.Column('user_id',sa.Integer(),sa.ForeignKey('users.id'),nullable=False),sa.Column('legal_document_id',sa.Integer(),sa.ForeignKey('legal_documents.id'),nullable=False),sa.Column('accepted_at',sa.DateTime(timezone=True),nullable=False),sa.Column('ip_address',sa.String(64)),sa.Column('user_agent',sa.String(500)),sa.Column('representative_name',sa.String(255)),sa.Column('representative_role',sa.String(150)),sa.Column('acceptance_method',sa.String(50),nullable=False,server_default='electronic_checkbox'),sa.Column('declaration',sa.Text()),sa.Column('created_at',sa.DateTime(timezone=True)),sa.Column('updated_at',sa.DateTime(timezone=True)),sa.UniqueConstraint('school_id','legal_document_id','user_id',name='uq_legal_acceptance_school_doc_user'))
+        op.create_index('ix_legal_acceptances_school_id','legal_acceptances',['school_id']); op.create_index('ix_legal_acceptances_user_id','legal_acceptances',['user_id']); op.create_index('ix_legal_acceptances_legal_document_id','legal_acceptances',['legal_document_id'])
+    if 'data_processing_authorizations' not in tables:
+        op.create_table('data_processing_authorizations',sa.Column('id',sa.Integer(),primary_key=True),sa.Column('school_id',sa.Integer(),sa.ForeignKey('schools.id'),nullable=False,unique=True),sa.Column('authorized_by_user_id',sa.Integer(),sa.ForeignKey('users.id'),nullable=False),sa.Column('organization_name',sa.String(255),nullable=False),sa.Column('controller_name',sa.String(255),nullable=False),sa.Column('controller_email',sa.String(255)),sa.Column('controller_phone',sa.String(80)),sa.Column('purposes',sa.Text(),nullable=False),sa.Column('categories',sa.Text(),nullable=False),sa.Column('retention_policy',sa.Text(),nullable=False),sa.Column('authorized_on',sa.Date(),nullable=False),sa.Column('revoked_on',sa.Date()),sa.Column('status',sa.String(30),nullable=False,server_default='active'),sa.Column('notes',sa.Text()),sa.Column('created_at',sa.DateTime(timezone=True)),sa.Column('updated_at',sa.DateTime(timezone=True)))
+        op.create_index('ix_data_processing_authorizations_school_id','data_processing_authorizations',['school_id'])
+
+def downgrade():
+    for t in ('data_processing_authorizations','legal_acceptances','legal_documents','subscription_payments','subscription_invoices'):
+        if t in inspect(op.get_bind()).get_table_names(): op.drop_table(t)

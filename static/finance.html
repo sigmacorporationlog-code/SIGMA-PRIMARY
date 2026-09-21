@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Finance</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Finance</h2>
+    <p class="page-subtitle">Grilles de frais, factures, paiements et reçus</p>
+
+    <div id="context-bar"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="fees">Grille de frais</button>
+      <button class="tab-btn" data-tab="student">Dossier élève</button>
+    </div>
+
+    <!-- ---------- Onglet Grille de frais ---------- -->
+    <section id="tab-fees">
+      <div class="panel">
+        <h3>Nouveau frais</h3>
+        <div class="form-grid">
+          <div class="field"><label>Type</label>
+            <select id="fee-type">
+              <option value="registration">Inscription</option><option value="tuition">Scolarité</option>
+              <option value="canteen">Cantine</option><option value="transport">Transport</option>
+              <option value="uniform">Uniforme</option><option value="exam">Examens</option>
+              <option value="activity">Activités</option><option value="other">Autre</option>
+            </select>
+          </div>
+          <div class="field"><label>Libellé</label><input id="fee-label" placeholder="ex: Scolarité T1" /></div>
+          <div class="field"><label>Montant</label><input id="fee-amount" type="number" /></div>
+        </div>
+        <button class="btn" onclick="createFeeStructure()">Ajouter</button>
+        <div id="fee-error" class="form-error"></div>
+      </div>
+      <table class="sigma-table">
+        <thead><tr><th>Libellé</th><th>Type</th><th>Montant</th></tr></thead>
+        <tbody id="fees-body"></tbody>
+      </table>
+    </section>
+
+    <!-- ---------- Onglet Dossier élève ---------- -->
+    <section id="tab-student" style="display:none;">
+      <div class="panel">
+        <div class="form-row">
+          <div class="field"><label>Rechercher un élève</label><input id="student-search" placeholder="nom, prénom, matricule" onkeydown="if(event.key==='Enter') searchStudents()" /></div>
+          <button class="btn" onclick="searchStudents()">Rechercher</button>
+        </div>
+        <div id="student-results"></div>
+      </div>
+
+      <div id="student-detail" style="display:none;">
+        <div class="panel">
+          <h3 id="student-detail-title">Élève sélectionné</h3>
+
+          <h4 style="font-family:var(--font-brand); color:var(--primary); font-size:13px;">Nouvelle facture</h4>
+          <div class="form-row">
+            <div class="field"><label>Frais</label><select id="invoice-fee"></select></div>
+            <div class="field"><label>Montant dû</label><input id="invoice-amount" type="number" /></div>
+            <div class="field"><label>Remise</label><input id="invoice-discount" type="number" value="0" /></div>
+            <div class="field"><label>Échéance</label><input id="invoice-due" type="date" /></div>
+            <button class="btn" onclick="createInvoice()">Créer la facture</button>
+          </div>
+          <div id="invoice-error" class="form-error"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Factures</h3>
+          <table class="sigma-table">
+            <thead><tr><th>ID</th><th>Montant dû</th><th>Remise</th><th>Statut</th></tr></thead>
+            <tbody id="invoices-body"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h4 style="font-family:var(--font-brand); color:var(--primary); font-size:13px; margin-top:0;">Enregistrer un paiement</h4>
+          <div class="form-row">
+            <div class="field"><label>Facture</label><select id="payment-invoice"></select></div>
+            <div class="field"><label>Montant</label><input id="payment-amount" type="number" /></div>
+            <div class="field"><label>Moyen</label>
+              <select id="payment-method">
+                <option value="cash">Espèces</option><option value="transfer">Virement</option>
+                <option value="check">Chèque</option><option value="mobile_money">Mobile Money</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+            <button class="btn" onclick="recordPayment()">Enregistrer</button>
+          </div>
+          <div id="payment-error" class="form-error"></div>
+
+          <h3>Paiements</h3>
+          <table class="sigma-table">
+            <thead><tr><th>Reçu</th><th>Montant</th><th>Moyen</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="payments-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+let selectedStudent = null;
+let feeStructures = [];
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["fees", "student"].forEach(t => document.getElementById("tab-" + t).style.display = (t === btn.dataset.tab) ? "block" : "none");
+  });
+});
+
+async function loadFeeStructures() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id || !ctx.academic_year_id) return;
+  feeStructures = await Sigma.api(`/api/fee-structures?school_id=${ctx.school_id}&academic_year_id=${ctx.academic_year_id}`);
+  document.getElementById("fees-body").innerHTML = feeStructures.length
+    ? feeStructures.map(f => `<tr><td>${Sigma.escapeHtml(f.label)}</td><td>${Sigma.escapeHtml(f.fee_type)}</td><td>${Number(f.amount).toLocaleString("fr-FR")}</td></tr>`).join("")
+    : `<tr><td colspan="3"><div class="empty-state">Aucun frais configuré pour cette année.</div></td></tr>`;
+
+  const feeSelect = document.getElementById("invoice-fee");
+  feeSelect.innerHTML = feeStructures.map(f => `<option value="${Number(f.id)}" data-amount="${Number(f.amount)}">${Sigma.escapeHtml(f.label)} (${Number(f.amount).toLocaleString("fr-FR")})</option>`).join("");
+  feeSelect.onchange = () => { document.getElementById("invoice-amount").value = feeSelect.selectedOptions[0]?.dataset.amount || ""; };
+  if (feeStructures.length) document.getElementById("invoice-amount").value = feeStructures[0].amount;
+}
+
+async function createFeeStructure() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("fee-error");
+  errorBox.textContent = "";
+  const label = document.getElementById("fee-label").value;
+  const amount = Number(document.getElementById("fee-amount").value);
+  if (!label || !amount) { errorBox.textContent = "Libellé et montant sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/fee-structures", {
+      school_id: Number(ctx.school_id), academic_year_id: Number(ctx.academic_year_id),
+      fee_type: document.getElementById("fee-type").value, label, amount,
+    });
+    document.getElementById("fee-label").value = ""; document.getElementById("fee-amount").value = "";
+    Sigma.toast("Frais ajouté");
+    loadFeeStructures();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function searchStudents() {
+  const ctx = Sigma.context.get();
+  const search = document.getElementById("student-search").value;
+  if (!search) return;
+  const data = await Sigma.api(`/api/students/grid?school_id=${ctx.school_id}&search=${encodeURIComponent(search)}&limit=10`);
+  const box = document.getElementById("student-results");
+  box.innerHTML = data.items.length
+    ? `<table class="sigma-table"><thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Classe</th><th></th></tr></thead><tbody>` +
+      data.items.map(s => `<tr><td>${Sigma.escapeHtml(s.matricule)}</td><td>${Sigma.escapeHtml(s.last_name)}</td><td>${Sigma.escapeHtml(s.first_name)}</td><td>${Sigma.escapeHtml(s.class_name || "—")}</td>
+        <td><button class="btn ghost sm" data-select-student="${encodeURIComponent(JSON.stringify(s))}">Sélectionner</button></td></tr>`).join("") +
+      `</tbody></table>`
+    : `<div class="empty-state">Aucun résultat.</div>`;
+  document.querySelectorAll("#student-results [data-select-student]").forEach(btn => btn.addEventListener("click", () => {
+    try { selectStudent(JSON.parse(decodeURIComponent(btn.dataset.selectStudent))); } catch (_) { Sigma.toast("Résultat élève invalide", "error"); }
+  }));
+}
+
+async function selectStudent(student) {
+  selectedStudent = student;
+  document.getElementById("student-detail").style.display = "block";
+  document.getElementById("student-detail-title").textContent = `${String(student.first_name ?? "")} ${String(student.last_name ?? "")} — Matricule ${String(student.matricule ?? "")}`;
+  await loadInvoices();
+  await loadPayments();
+}
+
+async function createInvoice() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("invoice-error");
+  errorBox.textContent = "";
+  if (!selectedStudent) return;
+  try {
+    await Sigma.postJson("/api/invoices", {
+      student_id: selectedStudent.id, academic_year_id: Number(ctx.academic_year_id),
+      fee_structure_id: Number(document.getElementById("invoice-fee").value),
+      amount_due: Number(document.getElementById("invoice-amount").value),
+      discount_amount: Number(document.getElementById("invoice-discount").value) || 0,
+      due_date: document.getElementById("invoice-due").value || null,
+    });
+    Sigma.toast("Facture créée");
+    loadInvoices();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+const STATUS_BADGES = {
+  pending: "grey", partially_paid: "orange", paid: "green", overdue: "red", exempted: "blue",
+};
+
+async function loadInvoices() {
+  const invoices = await Sigma.api(`/api/students/${selectedStudent.id}/invoices`);
+  document.getElementById("invoices-body").innerHTML = invoices.length
+    ? invoices.map(i => `<tr><td>#${i.id}</td><td>${i.amount_due.toLocaleString("fr-FR")}</td><td>${i.discount_amount.toLocaleString("fr-FR")}</td>
+        <td><span class="badge ${STATUS_BADGES[i.status] || "grey"}">${i.status}</span></td></tr>`).join("")
+    : `<tr><td colspan="4"><div class="empty-state">Aucune facture pour cet élève.</div></td></tr>`;
+
+  const invoiceSelect = document.getElementById("payment-invoice");
+  invoiceSelect.innerHTML = invoices.map(i => `<option value="${i.id}">#${i.id} — ${i.amount_due.toLocaleString("fr-FR")} (${Sigma.escapeHtml(i.status)})</option>`).join("");
+}
+
+async function recordPayment() {
+  const errorBox = document.getElementById("payment-error");
+  errorBox.textContent = "";
+  if (!selectedStudent) return;
+  const invoiceId = document.getElementById("payment-invoice").value;
+  if (!invoiceId) { errorBox.textContent = "Créez d'abord une facture."; return; }
+  try {
+    await Sigma.postJson("/api/payments", {
+      invoice_id: Number(invoiceId), student_id: selectedStudent.id,
+      amount: Number(document.getElementById("payment-amount").value),
+      method: document.getElementById("payment-method").value,
+    });
+    Sigma.toast("Paiement enregistré, reçu généré");
+    document.getElementById("payment-amount").value = "";
+    loadInvoices(); loadPayments();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function loadPayments() {
+  const payments = await Sigma.api(`/api/students/${selectedStudent.id}/payments`);
+  document.getElementById("payments-body").innerHTML = payments.length
+    ? payments.map(p => `
+        <tr>
+          <td>${Sigma.escapeHtml(p.receipt_number || "—")}</td>
+          <td>${Number(p.amount).toLocaleString("fr-FR")}</td>
+          <td>${Sigma.escapeHtml(p.method)}</td>
+          <td>${Sigma.escapeHtml(new Date(p.paid_at).toLocaleString("fr-FR"))}</td>
+          <td>${p.is_cancelled ? '<span class="badge red">Annulé</span>' : '<span class="badge green">Valide</span>'}</td>
+          <td>
+            <button class="btn ghost sm" data-payment-receipt="${Number(p.id)}" data-receipt-number="${Sigma.escapeHtml(p.receipt_number || "recu")}">Reçu PDF</button>
+            ${!p.is_cancelled ? `<button class="btn danger sm" onclick="cancelPayment(${p.id})">Annuler</button>` : ""}
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="6"><div class="empty-state">Aucun paiement enregistré.</div></td></tr>`;
+  document.querySelectorAll("#payments-body [data-payment-receipt]").forEach(btn => btn.addEventListener("click", async () => {
+    const id = Number(btn.dataset.paymentReceipt);
+    const raw = String(btn.dataset.receiptNumber || "recu");
+    const filename = `recu_${raw.replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
+    await Sigma.downloadBlob(`/api/payments/${id}/receipt/pdf`, filename);
+  }));
+}
+
+async function cancelPayment(paymentId) {
+  const reason = prompt("Motif de l'annulation (obligatoire, tracé dans le journal d'audit) :");
+  if (!reason) return;
+  try {
+    await Sigma.postJson(`/api/payments/${paymentId}/cancel`, { reason });
+    Sigma.toast("Paiement annulé");
+    loadInvoices(); loadPayments();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+Sigma.boot("/dashboard/finance.html", async () => {
+  await Sigma.renderContextBar("context-bar", { showClass: false, showPeriod: false }, loadFeeStructures);
+});
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/dashboard/sw.js").catch(()=>{});}</script></body>
+</html>

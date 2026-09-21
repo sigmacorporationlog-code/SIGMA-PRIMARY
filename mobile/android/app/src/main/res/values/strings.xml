@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SIGMA</string>
+    <string name="config_required">Cette APK SIGMA doit être compilée avec une URL serveur HTTPS valide.</string>
+    <string name="network_error">Connexion au serveur SIGMA impossible.</string>
+    <string name="offline_banner">Mode hors connexion — certaines fonctions nécessitent le serveur SIGMA.</string>
+    <string name="external_blocked">Lien externe ouvert hors de SIGMA.</string>
+    <string name="external_download_blocked">Téléchargement externe bloqué.</string>
+    <string name="download_started">Téléchargement lancé.</string>
+    <string name="download_failed">Téléchargement impossible.</string>
+</resources>

@@ -1,0 +1,31 @@
+{
+  "product": "SIGMA PRIMARY",
+  "version": "4.46.0",
+  "baseline_archive": "SIGMA_PRIMARY_V4.46.0_REAL_QUALIFIED_WORKSPACE.zip",
+  "baseline_sha256": "eaf2780bd159660c80f9be755133b51d07d10d39df6e1f78eef383035193842e",
+  "migration_head": "20260920_6340",
+  "qualification_status": "BASELINE_VERIFIED",
+  "repository": "sigmacorporationlog-code/SIGMA-PRIMARY",
+  "branch": "main",
+  "source_root_in_archive": "workspace/",
+  "import_mode": "EXTRACTED_UNMODIFIED_CONTENT",
+  "source_file_count": 584,
+  "excluded_files": [
+    {
+      "path": "restore_staging/restore_25d4de53becd4607a5fcc054ef7a69ef.zip",
+      "reason": "Generated restore archive contains sigma.db; excluded from public Git repository per database/generated-artifact policy."
+    },
+    {
+      "path": "restore_staging/restore_cde79e2e4ff04a878fdfea390d27d383.zip",
+      "reason": "Generated restore archive contains sigma.db; excluded from public Git repository per database/generated-artifact policy."
+    },
+    {
+      "path": "restore_staging/restore_1d11004df2e4450185eec257f96a91af.zip",
+      "reason": "Generated restore archive contains sigma.db; excluded from public Git repository per database/generated-artifact policy."
+    },
+    {
+      "path": "restore_staging/restore_96c401ca8d0344a691df0a53ccc461df.zip",
+      "reason": "Generated restore archive contains sigma.db; excluded from public Git repository per database/generated-artifact policy."
+    }
+  ]
+}

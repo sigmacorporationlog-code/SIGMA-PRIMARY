@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Administration</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Administration</h2>
+    <p class="page-subtitle">Structure de l'établissement, utilisateurs, postes &amp; permissions, journal d'audit</p>
+
+    <div id="context-bar"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="structure">Structure</button>
+      <button class="tab-btn" data-tab="users">Utilisateurs &amp; postes</button>
+      <button class="tab-btn" data-tab="delegations">Délégations</button>
+      <button class="tab-btn" data-tab="audit">Journal d'audit</button>
+      <button class="tab-btn" data-tab="backups">Sauvegardes</button>
+    </div>
+
+    <!-- ---------- Structure ---------- -->
+    <section id="tab-structure">
+      <div class="panels-grid">
+        <div class="panel">
+          <h3>Nouvel établissement</h3>
+          <div class="form-grid">
+            <div class="field"><label>Nom</label><input id="school-name" placeholder="ex: Lycée Excellence" /></div>
+            <div class="field"><label>Sigle</label><input id="school-short" /></div>
+            <div class="field"><label>Langue</label><select id="school-lang"><option value="fr">Français</option><option value="en">English</option></select></div>
+            <div class="field"><label>Devise</label><input id="school-currency" value="XAF" /></div><div class="field"><label>Téléphone 2</label><input id="school-phone2" /></div><div class="field"><label>Téléphone 1</label><input id="school-phone" /></div><div class="field"><label>E-mail</label><input id="school-email" type="email" /></div><div class="field"><label>Logo</label><input id="school-logo" type="file" accept="image/*" /></div><div class="field"><label>Timbre officiel</label><input id="school-stamp" type="file" accept="image/*" /></div>
+          </div>
+          <button class="btn" onclick="createSchool()">Créer l'établissement</button>
+          <div id="school-error" class="form-error"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Nouvelle année scolaire</h3>
+          <div class="form-grid">
+            <div class="field"><label>Libellé</label><input id="year-label" placeholder="2026/2027" /></div>
+            <div class="field"><label>Début</label><input id="year-start" type="date" /></div>
+            <div class="field"><label>Fin</label><input id="year-end" type="date" /></div>
+          </div>
+          <label style="font-size:13px;"><input type="checkbox" id="year-current" /> Année en cours</label><br/><br/>
+          <button class="btn" onclick="createYear()">Créer l'année</button>
+          <div id="year-error" class="form-error"></div>
+        </div>
+      </div>
+
+      <div class="panels-grid">
+        <div class="panel">
+          <h3>Nouvelle période</h3>
+          <div class="form-grid">
+            <div class="field"><label>Nom</label><input id="period-name" placeholder="Trimestre 1" /></div>
+            <div class="field"><label>Ordre</label><input id="period-order" type="number" value="1" /></div>
+            <div class="field"><label>Début</label><input id="period-start" type="date" /></div>
+            <div class="field"><label>Fin</label><input id="period-end" type="date" /></div>
+          </div>
+          <button class="btn" onclick="createPeriod()">Créer la période</button>
+          <div id="period-error" class="form-error"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Niveaux &amp; séries</h3>
+          <p class="muted" style="font-size:12px;">Vous pouvez maintenant <b>modifier</b> ou <b>désactiver</b> une création faite par erreur. Une désactivation conserve l’historique.</p>
+          <div class="form-row">
+            <div class="field"><label>Nouveau niveau</label><input id="level-name" placeholder="ex: 3e" /></div>
+            <button class="btn ghost sm" onclick="createLevel()">Ajouter</button>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Nouvelle série</label><input id="stream-name" placeholder="ex: Scientifique" /></div>
+            <button class="btn ghost sm" onclick="createStream()">Ajouter</button>
+          </div>
+          <div id="levels-list" style="font-size:13px; margin-top:8px;"></div><div id="streams-list" style="font-size:13px; margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Nouvelle classe</h3>
+        <div class="form-grid">
+          <div class="field"><label>Niveau</label><select id="class-level"></select></div>
+          <div class="field"><label>Série (optionnel)</label><select id="class-stream"><option value="">—</option></select></div>
+          <div class="field"><label>Nom</label><input id="class-name" placeholder="ex: 3e A" /></div>
+          <div class="field"><label>Capacité</label><input id="class-capacity" type="number" /></div>
+        </div>
+        <button class="btn" onclick="createClass()">Créer la classe</button>
+        <div id="class-error" class="form-error"></div>
+        <table class="sigma-table" style="margin-top:14px;">
+          <thead><tr><th>Nom</th><th>État</th><th>Actions</th></tr></thead>
+          <tbody id="classes-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Utilisateurs & postes ---------- -->
+    <section id="tab-users" style="display:none;">
+      <div class="panels-grid">
+        <div class="panel">
+          <h3>Nouvel utilisateur</h3>
+          <div class="form-grid">
+            <div class="field"><label>Identifiant</label><input id="user-username" /></div>
+            <div class="field"><label>Prénom</label><input id="user-first" /></div>
+            <div class="field"><label>Nom</label><input id="user-last" /></div>
+            <div class="field"><label>E-mail</label><input id="user-email" type="email" /></div>
+            <div class="field"><label>Mot de passe</label><input id="user-password" type="password" /></div>
+          </div>
+          <button class="btn" onclick="createUser()">Créer l'utilisateur</button>
+          <div id="user-error" class="form-error"></div>
+          <table class="sigma-table" style="margin-top:14px;">
+            <thead><tr><th>Identifiant</th><th>Nom</th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h3>Nouveau poste</h3>
+          <div class="form-row">
+            <div class="field"><label>Nom</label><input id="post-name" placeholder="ex: Enseignant" /></div>
+            <button class="btn ghost sm" onclick="createPost()">Créer</button>
+          </div>
+          <table class="sigma-table">
+            <thead><tr><th>Poste</th><th></th></tr></thead>
+            <tbody id="posts-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="post-permissions-panel" style="display:none;">
+        <h3 id="post-permissions-title">Permissions du poste</h3>
+        <div class="form-row">
+          <div class="field"><label>Permission</label><select id="permission-select"></select></div>
+          <button class="btn ghost sm" onclick="assignPermission()">Attribuer (tout l'établissement)</button>
+        </div>
+        <table class="sigma-table">
+          <thead><tr><th>Permission</th><th>Périmètre</th><th></th></tr></thead>
+          <tbody id="post-permissions-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h3>Affecter un utilisateur à un poste</h3>
+        <div class="form-row">
+          <div class="field"><label>Utilisateur</label><select id="assign-user"></select></div>
+          <div class="field"><label>Poste</label><select id="assign-post"></select></div>
+          <button class="btn" onclick="assignUserToPost()">Affecter</button>
+        </div>
+        <div id="assign-error" class="form-error"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Délégations ---------- -->
+    <section id="tab-delegations" style="display:none;">
+      <div class="panel">
+        <h3>Nouvelle délégation temporaire</h3>
+        <p style="font-size:12px; color:var(--text-muted);">Ex: Mme X est absente — le directeur délègue à M. Y la saisie des notes de mathématiques du 10/09 au 15/09.</p>
+        <div class="form-grid">
+          <div class="field"><label>Accordée par</label><select id="del-from"></select></div>
+          <div class="field"><label>Accordée à</label><select id="del-to"></select></div>
+          <div class="field"><label>Permission</label><select id="del-permission"></select></div>
+          <div class="field"><label>Du</label><input id="del-start" type="date" /></div>
+          <div class="field"><label>Au</label><input id="del-end" type="date" /></div>
+          <div class="field"><label>Motif</label><input id="del-reason" /></div>
+        </div>
+        <button class="btn" onclick="createDelegation()">Créer la délégation</button>
+        <div id="del-error" class="form-error"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Sauvegardes ---------- -->
+    <section id="tab-backups" style="display:none;">
+      <div class="panel">
+        <h3 style="margin:0 0 10px;">Paramètres de l'établissement</h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px;">Coordonnées, format du matricule et canal de communication par défaut.</p>
+        <div class="form-grid">
+          <div class="field"><label>Téléphone principal</label><input id="settings-phone" placeholder="+237 6XX XX XX XX" /></div>
+          <div class="field"><label>Téléphone secondaire</label><input id="settings-phone2" placeholder="+237 6XX XX XX XX" /></div>
+          <div class="field"><label>E-mail</label><input id="settings-email" type="email" /></div>
+          <div class="field"><label>Stratégie de matricule</label>
+            <select id="settings-matricule-strategy">
+              <option value="sequence">Séquence simple</option>
+              <option value="year_sequence">Année + séquence</option>
+              <option value="year_level_sequence">Année + niveau + séquence</option>
+              <option value="school_year_sequence">Établissement + année + séquence</option>
+              <option value="custom">Personnalisé (gabarit ci-dessous)</option>
+            </select>
+          </div>
+          <div class="field"><label>Gabarit personnalisé</label><input id="settings-matricule-template" placeholder="{YY}{SEQ:05}" data-tip="Utilisé seulement si stratégie = Personnalisé. Ex: {YY} = année sur 2 chiffres, {SEQ:05} = numéro sur 5 chiffres." /></div>
+          <div class="field"><label>Canal de communication par défaut</label>
+            <select id="settings-comm-channel">
+              <option value="sms">SMS (boîtier GSM)</option>
+              <option value="app">Application mobile</option>
+              <option value="both">Les deux</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="saveSchoolSettings()">Enregistrer les paramètres</button>
+        <div id="settings-error" class="form-error"></div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 10px;">Licence / abonnement</h3>
+        <div id="subscription-box" style="font-size:13px;">Chargement…</div>
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="field" style="flex:2;"><label>Clé de licence reçue de SIGMA</label>
+            <input id="license-key-input" placeholder="SIGMA-XXXXX-XXXXXXXXXXXXXXXXXXXXXXXX" style="font-family:monospace;" />
+          </div>
+        </div>
+        <button class="btn" onclick="activateLicenseKey()">Activer la licence</button>
+        <div id="license-activate-error" class="form-error"></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Cette clé vous est transmise par SIGMA après règlement de votre abonnement. Elle prolonge ou met à niveau automatiquement le plan de cet établissement.</p>
+      </div>
+
+      <div class="panel">
+        <div class="form-row" style="justify-content:space-between;">
+          <div><h3 style="margin:0;">Cloud de sauvegarde</h3><p style="font-size:12px;color:var(--text-muted);">Chaque sauvegarde réussie est aussi envoyée vers les comptes cloud actifs ci-dessous.</p></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Fournisseur</label>
+            <select id="cloud-provider">
+              <option value="google_drive">Google Drive</option>
+              <option value="onedrive">OneDrive</option>
+              <option value="dropbox">Dropbox</option>
+            </select>
+          </div>
+          <div class="field"><label>Nom (ex: Drive principal)</label><input id="cloud-label" /></div>
+          <div class="field"><label>Dossier cible</label><input id="cloud-folder" value="/SIGMA" /></div>
+          <div class="field" style="flex:2;"><label>Jeton d'accès</label><input id="cloud-token" type="password" data-tip="Générez ce jeton depuis la console développeur du fournisseur (Google Cloud Console, Microsoft Entra, Dropbox App Console)." /></div>
+        </div>
+        <button class="btn ghost sm" onclick="addCloudDestination()">Connecter ce compte</button>
+        <div id="cloud-error" class="form-error"></div>
+        <table class="sigma-table" style="margin-top:14px;">
+          <thead><tr><th>Fournisseur</th><th>Nom</th><th>Dossier</th><th>Dernière synchro</th><th>Actions</th></tr></thead>
+          <tbody id="cloud-destinations-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="form-row" style="justify-content:space-between;">
+          <div><h3 style="margin:0;">Sauvegardes de sécurité</h3><p style="font-size:12px;color:var(--text-muted);">La sauvegarde inclut la base SIGMA et les médias élèves.</p></div>
+          <button class="btn" onclick="createBackup()">Créer une sauvegarde maintenant</button>
+        </div>
+        <div id="backup-message" class="form-error"></div>
+        <div class="panel" style="margin-top:14px; padding:14px; background:var(--surface-2, transparent);">
+          <h4 style="margin:0 0 8px;">Restauration sécurisée</h4>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Le fichier est contrôlé, une sauvegarde de sécurité est créée, puis la restauration est appliquée au prochain redémarrage du serveur SIGMA.</p>
+          <div class="form-row">
+            <div class="field" style="flex:1;"><label>Archive SIGMA (.zip)</label><input id="restore-file" type="file" accept=".zip,application/zip" /></div>
+            <button class="btn" onclick="prepareRestore()">Préparer la restauration</button>
+            <button class="btn ghost sm" onclick="loadRestoreStatus()">Actualiser l'état</button>
+          </div>
+          <div id="restore-status" style="margin-top:10px;font-size:13px;"></div>
+          <div id="restore-actions" style="margin-top:8px;"></div>
+        </div>
+        <table class="sigma-table" style="margin-top:14px;">
+          <thead><tr><th>Fichier</th><th>Date</th><th>Taille</th><th></th></tr></thead>
+          <tbody id="backups-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Journal d'audit ---------- -->
+    <section id="tab-audit" style="display:none;">
+      <div class="panel">
+        <div class="form-row" style="justify-content:space-between;">
+          <h3 style="margin:0;">Journal d'audit (non modifiable)</h3>
+          <button class="btn ghost sm" onclick="loadAuditLogs()">Actualiser</button>
+        </div>
+        <table class="sigma-table">
+          <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Entité</th><th>Détail</th></tr></thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+let selectedPostId = null;
+let allUsers = [];
+let allPosts = [];
+let allPermissions = [];
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["structure", "users", "delegations", "audit", "backups"].forEach(t => document.getElementById("tab-" + t).style.display = (t === btn.dataset.tab) ? "block" : "none");
+    if (btn.dataset.tab === "audit") loadAuditLogs();
+    if (btn.dataset.tab === "backups") { loadBackups(); loadRestoreStatus(); loadSchoolSettings(); loadSubscription(); loadCloudDestinations(); }
+  });
+});
+
+// ---------- Structure ----------
+
+async function createSchool() {
+  const errorBox = document.getElementById("school-error");
+  errorBox.textContent = "";
+  const name = document.getElementById("school-name").value;
+  if (!name) { errorBox.textContent = "Le nom est obligatoire."; return; }
+  try {
+    const data = await Sigma.postJson("/api/schools", {
+      name, short_name: document.getElementById("school-short").value || null,
+      language: document.getElementById("school-lang").value, currency: document.getElementById("school-currency").value, phone: document.getElementById("school-phone").value || null, phone_secondary: document.getElementById("school-phone2").value || null, email: document.getElementById("school-email").value || null,
+    });
+    const logo=document.getElementById("school-logo").files[0], stamp=document.getElementById("school-stamp").files[0];
+    if(logo){const fd=new FormData();fd.append("file",logo);await Sigma.api(`/api/schools/${data.id}/logo`,{method:"POST",body:fd})}
+    if(stamp){const fd=new FormData();fd.append("file",stamp);await Sigma.api(`/api/schools/${data.id}/stamp`,{method:"POST",body:fd})}
+    Sigma.toast("Établissement créé et identité enregistrée.");
+    document.getElementById("school-name").value = "";
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function createYear() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("year-error");
+  errorBox.textContent = "";
+  const label = document.getElementById("year-label").value;
+  const start = document.getElementById("year-start").value;
+  const end = document.getElementById("year-end").value;
+  if (!label || !start || !end) { errorBox.textContent = "Libellé, début et fin sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/academic-years", {
+      school_id: Number(ctx.school_id), label, start_date: start, end_date: end,
+      is_current: document.getElementById("year-current").checked,
+    });
+    Sigma.toast("Année créée — rechargez la barre de contexte si besoin.");
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function createPeriod() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("period-error");
+  errorBox.textContent = "";
+  const name = document.getElementById("period-name").value;
+  const start = document.getElementById("period-start").value;
+  const end = document.getElementById("period-end").value;
+  if (!name || !start || !end) { errorBox.textContent = "Nom, début et fin sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/academic-periods", {
+      academic_year_id: Number(ctx.academic_year_id), name,
+      order_index: Number(document.getElementById("period-order").value) || 1,
+      start_date: start, end_date: end,
+    });
+    Sigma.toast("Période créée");
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function loadLevelsAndStreams() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id) return;
+  const [levels, streams] = await Promise.all([
+    Sigma.api(`/api/levels?school_id=${ctx.school_id}&include_inactive=true`),
+    Sigma.api(`/api/streams?school_id=${ctx.school_id}&include_inactive=true`),
+  ]);
+  document.getElementById("levels-list").innerHTML = levels.length
+    ? "Niveaux : " + levels.map(l => `<span class="badge ${l.is_active?'blue':'grey'}" style="margin-right:4px;">${escapeHtml(l.name)} ${l.is_active?'':'(désactivé)'}</span> <button class="btn ghost sm" onclick="editLevel(${l.id},'${escapeHtml(escapeJs(l.name))}',${l.order_index})">✏️</button> ${l.is_active ? `<button class="btn danger sm" onclick="deactivateLevel(${l.id},'${escapeHtml(escapeJs(l.name))}')">Désactiver</button>` : `<button class="btn ghost sm" onclick="restoreLevel(${l.id})">Réactiver</button>`}` ).join(" ")
+    : `<span class="empty-state">Aucun niveau créé.</span>`;
+  document.getElementById("streams-list").innerHTML = streams.length
+    ? "Séries : " + streams.map(s => `<span class="badge ${s.is_active?'blue':'grey'}" style="margin-right:4px;">${escapeHtml(s.name)} ${s.is_active?'':'(désactivée)'}</span> <button class="btn ghost sm" onclick="editStream(${s.id},'${escapeHtml(escapeJs(s.name))}')">✏️</button> ${s.is_active ? `<button class="btn danger sm" onclick="deactivateStream(${s.id},'${escapeHtml(escapeJs(s.name))}')">Désactiver</button>` : `<button class="btn ghost sm" onclick="restoreStream(${s.id})">Réactiver</button>`}` ).join(" ")
+    : `<span class="empty-state">Aucune série créée.</span>`;
+  const activeLevels = levels.filter(x=>x.is_active), activeStreams = streams.filter(x=>x.is_active);
+  document.getElementById("class-level").innerHTML = activeLevels.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join("");
+  document.getElementById("class-stream").innerHTML = `<option value="">—</option>` + activeStreams.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+}
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function escapeJs(v){return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');}
+async function createLevel() {
+  const ctx = Sigma.context.get(); const name = document.getElementById("level-name").value.trim(); if (!name) return;
+  try { await Sigma.api(`/api/levels?school_id=${ctx.school_id}&name=${encodeURIComponent(name)}`, { method: "POST" }); document.getElementById("level-name").value = ""; Sigma.toast("Niveau ajouté"); await loadLevelsAndStreams(); } catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function editLevel(id,name,orderIndex){
+  const newName=window.prompt('Corriger le nom du niveau :',name); if(newName===null)return;
+  const newOrder=window.prompt("Ordre d'affichage (1, 2, 3...) :",String(orderIndex)); if(newOrder===null)return;
+  try{await Sigma.api(`/api/levels/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:newName.trim(),order_index:Number(newOrder)})});Sigma.toast('Niveau modifié');await loadLevelsAndStreams();}catch(e){Sigma.toast(e.message,'error')}
+}
+async function deactivateLevel(id,name){if(!confirm(`Désactiver le niveau « ${name} » ? Il restera dans l'historique.`))return;try{await Sigma.api(`/api/levels/${id}`,{method:'DELETE'});Sigma.toast('Niveau désactivé');await loadLevelsAndStreams()}catch(e){Sigma.toast(e.message,'error')}}
+async function restoreLevel(id){try{await Sigma.api(`/api/levels/${id}/restore`,{method:'POST'});Sigma.toast('Niveau réactivé');await loadLevelsAndStreams()}catch(e){Sigma.toast(e.message,'error')}}
+async function createStream() {
+  const ctx = Sigma.context.get(); const name = document.getElementById("stream-name").value.trim(); if (!name) return;
+  try { await Sigma.api(`/api/streams?school_id=${ctx.school_id}&name=${encodeURIComponent(name)}`, { method: "POST" }); document.getElementById("stream-name").value = ""; Sigma.toast("Série ajoutée"); await loadLevelsAndStreams(); } catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function editStream(id,name){const n=window.prompt('Corriger le nom de la série :',name);if(n===null)return;try{await Sigma.api(`/api/streams/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n.trim()})});Sigma.toast('Série modifiée');await loadLevelsAndStreams()}catch(e){Sigma.toast(e.message,'error')}}
+async function deactivateStream(id,name){if(!confirm(`Désactiver la série « ${name} » ? Elle restera dans l'historique.`))return;try{await Sigma.api(`/api/streams/${id}`,{method:'DELETE'});Sigma.toast('Série désactivée');await loadLevelsAndStreams()}catch(e){Sigma.toast(e.message,'error')}}
+async function restoreStream(id){try{await Sigma.api(`/api/streams/${id}/restore`,{method:'POST'});Sigma.toast('Série réactivée');await loadLevelsAndStreams()}catch(e){Sigma.toast(e.message,'error')}}
+async function createClass() {
+  const ctx = Sigma.context.get(); const errorBox = document.getElementById("class-error"); errorBox.textContent = "";
+  const name = document.getElementById("class-name").value.trim(); if (!name) { errorBox.textContent = "Le nom est obligatoire."; return; }
+  try { await Sigma.postJson("/api/classes", { school_id: Number(ctx.school_id), academic_year_id: Number(ctx.academic_year_id), level_id: Number(document.getElementById("class-level").value), stream_id: document.getElementById("class-stream").value ? Number(document.getElementById("class-stream").value) : null, name, capacity: document.getElementById("class-capacity").value ? Number(document.getElementById("class-capacity").value) : null }); document.getElementById("class-name").value = ""; Sigma.toast("Classe créée"); await loadClasses(); } catch (e) { errorBox.textContent = e.message; }
+}
+async function editClass(id){
+  try{
+    const ctx=Sigma.context.get();
+    const [c,levels,streams]=await Promise.all([Sigma.api(`/api/classes/${id}/edit-context`),Sigma.api(`/api/levels?school_id=${ctx.school_id}`),Sigma.api(`/api/streams?school_id=${ctx.school_id}`)]);
+    const name=window.prompt('Corriger le nom de la classe :',c.name);if(name===null)return;
+    const levelName=window.prompt('Niveau actuel : '+(levels.find(x=>x.id===c.level_id)?.name||'—')+'\n\nSaisissez le nouvel ID du niveau, ou laissez vide pour conserver :',String(c.level_id));if(levelName===null)return;
+    const cap=window.prompt('Capacité :',c.capacity??'');if(cap===null)return;
+    const payload={name:name.trim(),capacity:cap===''?null:Number(cap)};if(levelName.trim())payload.level_id=Number(levelName);
+    await Sigma.api(`/api/classes/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});Sigma.toast('Classe modifiée');await loadClasses();await loadLevelsAndStreams();
+  }catch(e){Sigma.toast(e.message,'error')}
+}
+async function deactivateClass(id,name){if(!confirm(`Désactiver la classe « ${name} » ? Les élèves doivent d'abord être transférés.`))return;try{await Sigma.api(`/api/classes/${id}`,{method:'DELETE'});Sigma.toast('Classe désactivée');await loadClasses()}catch(e){Sigma.toast(e.message,'error')}}
+async function restoreClass(id){try{await Sigma.api(`/api/classes/${id}/restore`,{method:'POST'});Sigma.toast('Classe réactivée');await loadClasses()}catch(e){Sigma.toast(e.message,'error')}}
+async function loadClasses() {
+  const ctx = Sigma.context.get(); if (!ctx.school_id || !ctx.academic_year_id) return;
+  const classes = await Sigma.api(`/api/classes?school_id=${ctx.school_id}&academic_year_id=${ctx.academic_year_id}&include_inactive=true`);
+  const levels=await Sigma.api(`/api/levels?school_id=${ctx.school_id}`); const streams=await Sigma.api(`/api/streams?school_id=${ctx.school_id}`);
+  document.getElementById("classes-body").innerHTML = classes.length
+    ? classes.map(c => {const lv=levels.find(x=>x.id===c.level_id)?.name||'—';const st=streams.find(x=>x.id===c.stream_id)?.name||'—';return `<tr><td><b>${escapeHtml(c.name)}</b><div class="muted">${escapeHtml(lv)}${st!=='—'?' · '+escapeHtml(st):''}</div></td><td><span class="badge ${c.is_active?'green':'grey'}">${c.is_active?'Active':'Désactivée'}</span></td><td>${c.is_active?`<button class="btn ghost sm" onclick="editClass(${c.id})">✏️ Modifier</button> <button class="btn danger sm" onclick="deactivateClass(${c.id},'${escapeHtml(escapeJs(c.name))}')">Désactiver</button>`:`<button class="btn ghost sm" onclick="restoreClass(${c.id})">Réactiver</button>`}</td></tr>`}).join("")
+    : `<tr><td colspan="3"><div class="empty-state">Aucune classe pour cette année.</div></td></tr>`;
+}
+
+// ---------- Utilisateurs & postes ----------
+
+async function loadUsers() {
+  const ctx = Sigma.context.get();
+  allUsers = await Sigma.api(`/api/users?school_id=${ctx.school_id}`);
+  document.getElementById("users-body").innerHTML = allUsers.length
+    ? allUsers.map(u => `<tr><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)}</td></tr>`).join("")
+    : `<tr><td colspan="2"><div class="empty-state">Aucun utilisateur.</div></td></tr>`;
+
+  const opts = allUsers.map(u => `<option value="${Number(u.id)}">${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)} (${escapeHtml(u.username)})</option>`).join("");
+  ["assign-user", "del-from", "del-to"].forEach(id => document.getElementById(id).innerHTML = opts);
+}
+
+async function createUser() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("user-error");
+  errorBox.textContent = "";
+  const username = document.getElementById("user-username").value;
+  const password = document.getElementById("user-password").value;
+  if (!username || !password) { errorBox.textContent = "Identifiant et mot de passe sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/users", {
+      school_id: Number(ctx.school_id), username, password,
+      first_name: document.getElementById("user-first").value, last_name: document.getElementById("user-last").value,
+      email: document.getElementById("user-email").value || null,
+    });
+    ["user-username","user-first","user-last","user-email","user-password"].forEach(id => document.getElementById(id).value = "");
+    Sigma.toast("Utilisateur créé");
+    loadUsers();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function loadPosts() {
+  const ctx = Sigma.context.get();
+  allPosts = await Sigma.api(`/api/posts?school_id=${ctx.school_id}`);
+  document.getElementById("posts-body").innerHTML = allPosts.length
+    ? allPosts.map(p => `<tr><td>${escapeHtml(p.name)}</td><td><button class="btn ghost sm" data-post-id="${Number(p.id)}">Gérer les permissions</button></td></tr>`).join("")
+    : `<tr><td colspan="2"><div class="empty-state">Aucun poste.</div></td></tr>`;
+
+  document.getElementById("assign-post").innerHTML = allPosts.map(p => `<option value="${Number(p.id)}">${escapeHtml(p.name)}</option>`).join("");
+  document.querySelectorAll("#posts-body [data-post-id]").forEach(btn => btn.addEventListener("click", () => openPostPermissions(Number(btn.dataset.postId), btn.closest("tr")?.querySelector("td")?.textContent || "")));
+}
+
+async function createPost() {
+  const ctx = Sigma.context.get();
+  const name = document.getElementById("post-name").value;
+  if (!name) return;
+  try {
+    await Sigma.postJson("/api/posts", { school_id: Number(ctx.school_id), name });
+    document.getElementById("post-name").value = "";
+    Sigma.toast("Poste créé");
+    loadPosts();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function loadPermissionCatalog() {
+  allPermissions = await Sigma.api("/api/permissions");
+  document.getElementById("permission-select").innerHTML = allPermissions.map(p => `<option value="${escapeHtml(p.code)}">[${escapeHtml(p.module)}] ${escapeHtml(p.label)}</option>`).join("");
+  document.getElementById("del-permission").innerHTML = allPermissions.map(p => `<option value="${escapeHtml(p.code)}">[${escapeHtml(p.module)}] ${escapeHtml(p.label)}</option>`).join("");
+}
+
+async function openPostPermissions(postId, postName) {
+  selectedPostId = postId;
+  document.getElementById("post-permissions-panel").style.display = "block";
+  document.getElementById("post-permissions-title").textContent = `Permissions — ${postName}`;
+  await loadPostPermissions();
+  document.getElementById("post-permissions-panel").scrollIntoView({ behavior: "smooth" });
+}
+
+async function loadPostPermissions() {
+  const links = await Sigma.api(`/api/posts/${selectedPostId}/permissions`);
+  document.getElementById("post-permissions-body").innerHTML = links.length
+    ? links.map(l => `<tr><td>${escapeHtml(l.label)}</td><td>${escapeHtml(Object.keys(l.scope || {}).length ? JSON.stringify(l.scope) : "Tout l'établissement")}</td>
+        <td><button class="btn danger sm" onclick="removePostPermission(${l.id})">Retirer</button></td></tr>`).join("")
+    : `<tr><td colspan="3"><div class="empty-state">Aucune permission attribuée à ce poste.</div></td></tr>`;
+}
+
+async function assignPermission() {
+  if (!selectedPostId) return;
+  const code = document.getElementById("permission-select").value;
+  try {
+    await Sigma.postJson(`/api/posts/${selectedPostId}/permissions`, { permission_code: code, scope: {} });
+    Sigma.toast("Permission attribuée");
+    loadPostPermissions();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function removePostPermission(linkId) {
+  try {
+    await Sigma.api(`/api/posts/${selectedPostId}/permissions/${linkId}`, { method: "DELETE" });
+    Sigma.toast("Permission retirée");
+    loadPostPermissions();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function assignUserToPost() {
+  const errorBox = document.getElementById("assign-error");
+  errorBox.textContent = "";
+  try {
+    await Sigma.postJson("/api/user-posts", {
+      user_id: Number(document.getElementById("assign-user").value),
+      post_id: Number(document.getElementById("assign-post").value),
+    });
+    Sigma.toast("Utilisateur affecté au poste");
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+// ---------- Délégations ----------
+
+async function createDelegation() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("del-error");
+  errorBox.textContent = "";
+  const start = document.getElementById("del-start").value;
+  const end = document.getElementById("del-end").value;
+  if (!start || !end) { errorBox.textContent = "Les dates de début et de fin sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/delegations", {
+      school_id: Number(ctx.school_id),
+      granted_by_id: Number(document.getElementById("del-from").value),
+      granted_to_id: Number(document.getElementById("del-to").value),
+      permission_code: document.getElementById("del-permission").value,
+      scope: {}, start_date: start, end_date: end,
+      reason: document.getElementById("del-reason").value || null,
+    });
+    Sigma.toast("Délégation créée");
+    ["del-start","del-end","del-reason"].forEach(id => document.getElementById(id).value = "");
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+// ---------- Sauvegardes ----------
+function esc(value) {
+  return String(value ?? "").replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]));
+}
+async function loadBackups() {
+  try {
+    const data = await Sigma.api("/api/system/backups");
+    const rows = data.items || [];
+    document.getElementById("backups-body").innerHTML = rows.length ? rows.map(b => `<tr><td>${esc(b.name)}</td><td>${new Date(b.created_at).toLocaleString("fr-FR")}</td><td>${Math.round(b.size/1024)} Ko</td><td>${b.valid === false ? '<span class="form-error">Archive invalide</span>' : `<a class="btn ghost sm" href="/api/system/backups/${encodeURIComponent(b.name)}/download">Télécharger</a>`}</td></tr>`).join("") : `<tr><td colspan="4"><div class="empty-state">Aucune sauvegarde.</div></td></tr>`;
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function createBackup() {
+  const box = document.getElementById("backup-message"); box.textContent = "Création de la sauvegarde…";
+  try {
+    const b = await Sigma.api("/api/system/backup", {method:"POST"});
+    const cloudOk = (b.cloud || []).filter(c => c.status === "ok").length;
+    const cloudFail = (b.cloud || []).filter(c => c.status === "error");
+    let msg = `Sauvegarde créée : ${esc(b.name)}`;
+    if (cloudOk) msg += ` — envoyée vers ${cloudOk} destination(s) cloud.`;
+    if (cloudFail.length) msg += ` (${cloudFail.length} échec(s) cloud — la sauvegarde locale reste valide.)`;
+    box.textContent = msg;
+    Sigma.toast("Sauvegarde créée");
+    await loadBackups();
+    if (cloudFail.length) await loadCloudDestinations();
+  }
+  catch (e) { box.textContent = e.message; }
+}
+
+// ---------- Paramètres établissement ----------
+async function loadSchoolSettings() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id) return;
+  try {
+    const s = await Sigma.api(`/api/schools/${ctx.school_id}`);
+    document.getElementById("settings-phone").value = s.phone || "";
+    document.getElementById("settings-phone2").value = s.phone_secondary || "";
+    document.getElementById("settings-email").value = s.email || "";
+    document.getElementById("settings-matricule-strategy").value = s.matricule_strategy || "year_sequence";
+    document.getElementById("settings-matricule-template").value = s.matricule_template || "";
+    document.getElementById("settings-comm-channel").value = s.communication_channel_default || "sms";
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function saveSchoolSettings() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("settings-error"); errorBox.textContent = "";
+  if (!ctx.school_id) { errorBox.textContent = "Aucun établissement sélectionné."; return; }
+  try {
+    await Sigma.patchJson(`/api/schools/${ctx.school_id}/settings`, {
+      phone: document.getElementById("settings-phone").value || null,
+      phone_secondary: document.getElementById("settings-phone2").value || null,
+      email: document.getElementById("settings-email").value || null,
+      matricule_strategy: document.getElementById("settings-matricule-strategy").value,
+      matricule_template: document.getElementById("settings-matricule-template").value || null,
+      communication_channel_default: document.getElementById("settings-comm-channel").value,
+    });
+    Sigma.toast("Paramètres enregistrés.");
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+// ---------- Licence / abonnement ----------
+async function loadSubscription() {
+  const ctx = Sigma.context.get();
+  const box = document.getElementById("subscription-box");
+  if (!ctx.school_id) return;
+  try {
+    const s = await Sigma.api(`/api/cloud/subscription?school_id=${ctx.school_id}`);
+    const statusLabel = {trial: "Essai", active: "Active", suspended: "Suspendue", expired: "Expirée"}[s.status] || s.status;
+    box.innerHTML = `
+      <div class="form-row" style="gap:24px;flex-wrap:wrap;">
+        <div><strong>Plan</strong><br/>${esc(s.plan)}</div>
+        <div><strong>Statut</strong><br/>${esc(statusLabel)}${s.days_remaining != null ? ` (${s.days_remaining} j restants)` : ""}</div>
+        <div><strong>Utilisateurs</strong><br/>${s.usage.users} / ${s.limits.users}</div>
+        <div><strong>Élèves</strong><br/>${s.usage.students} / ${s.limits.students}</div>
+      </div>`;
+  } catch (e) { box.textContent = "Abonnement non configuré pour cet établissement."; }
+}
+async function activateLicenseKey() {
+  const ctx = Sigma.context.get();
+  const input = document.getElementById("license-key-input");
+  const errorBox = document.getElementById("license-activate-error");
+  errorBox.textContent = "";
+  const key = (input.value || "").trim();
+  if (!key) { errorBox.textContent = "Veuillez saisir une clé de licence."; return; }
+  try {
+    await Sigma.api("/api/cloud/license/activate", { method: "POST", body: JSON.stringify({ school_id: ctx.school_id, license_key: key }) });
+    input.value = "";
+    Sigma.toast("Licence activée avec succès.");
+    loadSubscription();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+// ---------- Cloud de sauvegarde ----------
+async function loadCloudDestinations() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id) return;
+  const providerLabels = {google_drive: "Google Drive", onedrive: "OneDrive", dropbox: "Dropbox"};
+  try {
+    const data = await Sigma.api(`/api/cloud-backup-destinations?school_id=${ctx.school_id}`);
+    const rows = data.items || [];
+    document.getElementById("cloud-destinations-body").innerHTML = rows.length ? rows.map(d => `<tr>
+        <td>${esc(providerLabels[d.provider] || d.provider)}</td>
+        <td>${esc(d.label)}</td>
+        <td>${esc(d.folder_path)}</td>
+        <td>${d.last_synced_at ? new Date(d.last_synced_at).toLocaleString("fr-FR") : (d.last_sync_error ? `<span class="form-error">${esc(d.last_sync_error)}</span>` : "Jamais synchronisé")}</td>
+        <td><button class="btn ghost sm" onclick="testCloudDestination(${d.id})">Tester</button> <button class="btn ghost sm" onclick="deleteCloudDestination(${d.id})">Supprimer</button></td>
+      </tr>`).join("") : `<tr><td colspan="5"><div class="empty-state">Aucun compte cloud connecté.</div></td></tr>`;
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function addCloudDestination() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("cloud-error"); errorBox.textContent = "";
+  const token = document.getElementById("cloud-token").value;
+  const label = document.getElementById("cloud-label").value;
+  if (!token || !label) { errorBox.textContent = "Le nom et le jeton d'accès sont obligatoires."; return; }
+  try {
+    await Sigma.postJson("/api/cloud-backup-destinations", {
+      school_id: Number(ctx.school_id),
+      provider: document.getElementById("cloud-provider").value,
+      label, access_token: token,
+      folder_path: document.getElementById("cloud-folder").value || "/SIGMA",
+    });
+    document.getElementById("cloud-token").value = "";
+    document.getElementById("cloud-label").value = "";
+    Sigma.toast("Compte cloud connecté — pensez à le tester.");
+    await loadCloudDestinations();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+async function testCloudDestination(id) {
+  try {
+    const r = await Sigma.api(`/api/cloud-backup-destinations/${id}/test`, {method:"POST"});
+    if (r.status === "ok") Sigma.toast("Connexion réussie.");
+    else Sigma.toast("Échec de connexion : " + r.error, "error");
+  } catch (e) { Sigma.toast(e.message, "error"); }
+  await loadCloudDestinations();
+}
+async function deleteCloudDestination(id) {
+  if (!confirm("Supprimer ce compte cloud ? Les prochaines sauvegardes ne lui seront plus envoyées.")) return;
+  try { await Sigma.api(`/api/cloud-backup-destinations/${id}`, {method:"DELETE"}); await loadCloudDestinations(); }
+  catch (e) { Sigma.toast(e.message, "error"); }
+}
+async function loadRestoreStatus() {
+  const statusBox = document.getElementById("restore-status");
+  const actions = document.getElementById("restore-actions");
+  try {
+    const data = await Sigma.api("/api/system/restore/status");
+    const p = data.pending;
+    if (!p) {
+      statusBox.innerHTML = '<span>✓ Aucune restauration en attente.</span>';
+      actions.innerHTML = '';
+      return;
+    }
+    statusBox.innerHTML = `<strong>⚠ Restauration en attente</strong><br/>Archive : ${esc(p.app_version || 'version inconnue')} — préparée le ${new Date(p.created_at).toLocaleString("fr-FR")}`;
+    actions.innerHTML = '<button class="btn ghost sm" onclick="cancelRestore()">Annuler la restauration en attente</button>';
+  } catch (e) { statusBox.textContent = e.message; }
+}
+async function prepareRestore() {
+  const input = document.getElementById("restore-file");
+  const box = document.getElementById("restore-status");
+  if (!input.files.length) { box.textContent = "Sélectionnez une archive ZIP SIGMA."; return; }
+  const file = input.files[0];
+  if (!file.name.toLowerCase().endsWith(".zip")) { box.textContent = "Seules les archives .zip sont acceptées."; return; }
+  if (!confirm("Préparer cette restauration ? Une sauvegarde de sécurité sera créée et SIGMA devra être redémarré pour appliquer la restauration.")) return;
+  box.textContent = "Validation de l'archive et création de la sauvegarde de sécurité…";
+  const fd = new FormData(); fd.append("file", file);
+  try {
+    const result = await Sigma.api("/api/system/restore/prepare", {method:"POST", body:fd});
+    box.textContent = result.message || "Restauration préparée.";
+    input.value = '';
+    Sigma.toast("Restauration préparée");
+    await loadRestoreStatus();
+    await loadBackups();
+  } catch (e) { box.textContent = e.message; }
+}
+async function cancelRestore() {
+  if (!confirm("Annuler la restauration en attente ? L'archive préparée sera supprimée.")) return;
+  try {
+    await Sigma.api("/api/system/restore/cancel", {method:"POST"});
+    Sigma.toast("Restauration annulée");
+    await loadRestoreStatus();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+// ---------- Audit ----------
+
+async function loadAuditLogs() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id) return;
+  try {
+    const logs = await Sigma.api(`/api/audit-logs?school_id=${ctx.school_id}&limit=100`);
+    document.getElementById("audit-body").innerHTML = logs.length
+      ? logs.map(l => `<tr>
+          <td>${new Date(l.at).toLocaleString("fr-FR")}</td><td>${l.user_id ?? "—"}</td>
+          <td>${l.action}</td><td>${l.entity_type}${l.entity_id ? " #" + l.entity_id : ""}</td>
+          <td style="font-size:11.5px;">${l.old_value ? "Avant: " + l.old_value + "<br/>" : ""}${l.new_value ? "Après: " + l.new_value : ""}</td>
+        </tr>`).join("")
+      : `<tr><td colspan="5"><div class="empty-state">Aucune entrée d'audit.</div></td></tr>`;
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function refreshAll() {
+  await loadLevelsAndStreams();
+  await loadClasses();
+  await loadUsers();
+  await loadPosts();
+  await loadPermissionCatalog();
+  if (document.getElementById("tab-backups").style.display !== "none") await loadRestoreStatus();
+}
+
+Sigma.boot("/dashboard/administration.html", async () => {
+  await Sigma.renderContextBar("context-bar", { showClass: false, showPeriod: false }, refreshAll);
+});
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/dashboard/sw.js").catch(()=>{});}</script></body>
+</html>

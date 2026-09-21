@@ -1,0 +1,177 @@
+........................................................................ [ 45%]
+......................F.......F......................................... [ 91%]
+..............                                                           [100%]
+=================================== FAILURES ===================================
+________________ test_bootstrapped_director_can_create_students ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-11/test_bootstrapped_director_can0')
+
+    def test_bootstrapped_director_can_create_students(tmp_path):
+        # Exécuté dans un sous-processus dédié : recharger app.models en plein
+        # milieu de la suite de tests pollue le registre déclaratif partagé de
+        # SQLAlchemy (deux classes User distinctes coexistent alors), ce qui
+        # casse des tests plus tard dans la même suite avec une erreur de join
+        # sans rapport ("Don't know how to join to..."). Un sous-processus
+        # isolé évite totalement ce risque.
+        import subprocess
+        import sys
+        import textwrap
+    
+        env_file = tmp_path / ".env"
+        env_file.write_text(
+            "ENV=production\nSECRET_KEY=test-secret\n"
+            "SIGMA_INITIAL_ADMIN_PASSWORD=TestPassword123456!\n",
+            encoding="utf-8",
+        )
+        script = textwrap.dedent(
+            """
+            import seed
+            seed.run()
+            from app.core.database import SessionLocal
+            from app.services.rbac_enterprise import bootstrap_first_administrator
+            from app.services.authorization import user_has_permission
+            from app.models.security import User
+    
+            db = SessionLocal()
+            director = User(
+                school_id=1, username="directeur_test", email=None,
+                hashed_password="x", first_name="Jean", last_name="Directeur",
+                is_superadmin=False, must_change_password=True,
+            )
+            db.add(director)
+            db.commit()
+            db.refresh(director)
+    
+            post = bootstrap_first_administrator(db, 1, director, profile_code="direction")
+            assert post is not None
+            for perm in ("students.create", "students.modify", "students.archive", "students.transfer"):
+                assert user_has_permission(db, director, perm), perm
+            print("OK")
+            """
+        )
+        env = {**__import__("os").environ, "SIGMA_DATA_DIR": str(tmp_path)}
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(ROOT),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 2, in <module>
+E             import seed
+E           File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+E             from app.core.security import hash_password
+E           File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+E             from jose import jwt, JWTError
+E         ModuleNotFoundError: No module named 'jose'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom app.core.database import Sessi...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+
+tests/test_v467_direction_profile_student_rights.py:83: AssertionError
+_________________ test_sync_isolates_failures_and_never_raises _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-11/test_sync_isolates_failures_an0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f980e70ab60>
+
+    def test_sync_isolates_failures_and_never_raises(tmp_path, monkeypatch):
+        """Le point le plus important : une destination cassée (jeton expiré,
+        fournisseur injoignable) ne doit jamais transformer une sauvegarde
+        locale déjà réussie en échec pour l'utilisateur."""
+        import subprocess
+        import sys
+        import textwrap
+        from pathlib import Path
+    
+        ROOT = Path(__file__).resolve().parents[1]
+        env_file = tmp_path / ".env"
+        env_file.write_text(
+            "ENV=production\nSECRET_KEY=test-secret-key-for-cloud-backup\n",
+            encoding="utf-8",
+        )
+        archive = tmp_path / "fake_backup.zip"
+        archive.write_bytes(b"contenu factice de sauvegarde")
+    
+        script = textwrap.dedent(
+            f"""
+            import seed
+            seed.run()
+            from pathlib import Path
+            from app.core.database import SessionLocal
+            from app.models.backup_cloud import CloudBackupDestination
+            from app.services.crypto import encrypt_secret
+            from app.services.cloud_backup_providers import sync_backup_to_cloud_destinations
+    
+            db = SessionLocal()
+            # Un jeton pointant vers un fournisseur inconnu garantit un échec
+            # déterministe, sans jamais tenter d'appel réseau réel.
+            dest = CloudBackupDestination(
+                school_id=1, provider="dropbox", label="Test",
+                encrypted_access_token=encrypt_secret("jeton-invalide-sans-reseau"),
+                folder_path="/SIGMA", is_active=True,
+            )
+            db.add(dest)
+            db.commit()
+    
+            results = sync_backup_to_cloud_destinations(db, Path({str(archive)!r}))
+            assert len(results) == 1
+            # On n'exige pas un statut précis (dépend du réseau du sandbox de
+            # build), seulement que la fonction n'ait jamais levé d'exception.
+            assert results[0]["provider"] == "dropbox"
+            print("OK", results[0]["status"])
+            """
+        )
+        env = {**__import__("os").environ, "SIGMA_DATA_DIR": str(tmp_path)}
+        result = subprocess.run(
+            [sys.executable, "-c", script], cwd=str(ROOT), env=env,
+            capture_output=True, text=True, timeout=60,
+        )
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 2, in <module>
+E             import seed
+E           File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+E             from app.core.security import hash_password
+E           File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+E             from jose import jwt, JWTError
+E         ModuleNotFoundError: No module named 'jose'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom pathlib import Path\nfrom app....ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+
+tests/test_v468_cloud_backup_providers.py:144: AssertionError
+=============================== warnings summary ===============================
+tests/test_p2_p3_data_validation.py::test_financial_decimal_boundaries_are_exact
+tests/test_p2_p3_data_validation.py::test_financial_decimal_boundaries_are_exact
+tests/test_p2_p3_data_validation.py::test_financial_decimal_boundaries_are_exact
+  /opt/pyvenv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:325: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.13/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_v467_direction_profile_student_rights.py::test_bootstrapped_director_can_create_students - AssertionError: Traceback (most recent call last):
+    File "<string>", line 2, in <module>
+      import seed
+    File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+      from app.core.security import hash_password
+    File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+      from jose import jwt, JWTError
+  ModuleNotFoundError: No module named 'jose'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom app.core.database import Sessi...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+FAILED tests/test_v468_cloud_backup_providers.py::test_sync_isolates_failures_and_never_raises - AssertionError: Traceback (most recent call last):
+    File "<string>", line 2, in <module>
+      import seed
+    File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+      from app.core.security import hash_password
+    File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+      from jose import jwt, JWTError
+  ModuleNotFoundError: No module named 'jose'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom pathlib import Path\nfrom app....ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+2 failed, 156 passed, 3 warnings in 5.51s

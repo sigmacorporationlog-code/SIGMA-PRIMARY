@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Académique</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Académique</h2>
+    <p class="page-subtitle">Matières, évaluations, saisie des notes, classements et bulletins</p>
+
+    <div id="context-bar"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="subjects">Matières</button>
+      <button class="tab-btn" data-tab="grades">Évaluations &amp; notes</button>
+      <button class="tab-btn" data-tab="reportcards">Classement &amp; bulletins</button>
+      <button class="tab-btn" data-tab="configuration">Configuration</button>
+    </div>
+
+    <!-- ---------- Onglet Matières ---------- -->
+    <section id="tab-subjects">
+      <div class="panel">
+        <h3>Nouvelle matière</h3>
+        <div class="form-row">
+          <div class="field"><label>Nom</label><input id="subject-name" placeholder="ex: Mathématiques" /></div>
+          <div class="field"><label>Coefficient par défaut</label><input id="subject-coeff" type="number" step="0.5" value="1" style="width:100px;" /></div>
+          <button class="btn" onclick="createSubject()">Ajouter</button>
+        </div>
+        <div id="subject-error" class="form-error"></div>
+      </div>
+      <table class="sigma-table">
+        <thead><tr><th>Nom</th><th>Coefficient par défaut</th></tr></thead>
+        <tbody id="subjects-body"></tbody>
+      </table>
+    </section>
+
+    <!-- ---------- Onglet Évaluations & notes ---------- -->
+    <section id="tab-grades" style="display:none;">
+      <div class="panel">
+        <h3>Nouvelle évaluation</h3>
+        <div class="form-grid">
+          <div class="field"><label>Matière</label><select id="assessment-subject"></select></div>
+          <div class="field"><label>Nom</label><input id="assessment-name" placeholder="ex: Composition 1" /></div>
+          <div class="field"><label>Type</label>
+            <select id="assessment-type">
+              <option value="devoir">Devoir</option><option value="interrogation">Interrogation</option>
+              <option value="composition">Composition</option><option value="examen">Examen</option>
+              <option value="projet">Projet</option><option value="oral">Oral</option><option value="pratique">Pratique</option>
+            </select>
+          </div>
+          <div class="field"><label>Barème</label><input id="assessment-max" type="number" value="20" /></div>
+          <div class="field"><label>Coefficient</label><input id="assessment-coeff" type="number" step="0.5" value="1" /></div>
+        </div>
+        <button class="btn" onclick="createAssessment()">Créer l'évaluation</button>
+        <div id="assessment-error" class="form-error"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Évaluations de la classe / période</h3>
+        <table class="sigma-table">
+          <thead><tr><th>Nom</th><th>Type</th><th>Barème</th><th>Coeff.</th><th></th></tr></thead>
+          <tbody id="assessments-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel" id="grade-entry-panel" style="display:none;">
+        <h3 id="grade-entry-title">Saisie des notes</h3>
+        <table class="sigma-table">
+          <thead><tr><th>Matricule</th><th>Élève</th><th>Note / <span id="grade-max">20</span></th><th>Absent</th><th>État</th></tr></thead>
+          <tbody id="grades-body"></tbody>
+        </table>
+        <div class="form-row" style="margin-top:14px;">
+          <button class="btn" onclick="saveGrades()">💾 Enregistrer les notes</button>
+          <button class="btn ghost" onclick="transitionGrades('submitted')">Soumettre</button>
+          <button class="btn ghost" onclick="transitionGrades('checked')">Vérifier</button>
+          <button class="btn ghost" onclick="transitionGrades('validated')">Valider</button>
+          <button class="btn ghost" onclick="transitionGrades('locked')">🔒 Verrouiller</button>
+          <button class="btn accent" onclick="transitionGrades('published')">Publier</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Onglet Classement & bulletins ---------- -->
+    <section id="tab-reportcards" style="display:none;">
+      <div class="panel">
+        <h3>Classement de la classe</h3>
+        <table class="sigma-table">
+          <thead><tr><th>Rang</th><th>Élève</th><th>Moyenne / 20</th></tr></thead>
+          <tbody id="ranking-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="form-row">
+          <h3 style="margin:0;">Bulletins</h3>
+          <button class="btn" onclick="generateReportCards()">⚙️ Générer les bulletins de la classe</button>
+          <button class="btn accent" onclick="downloadClassReportCardsPdf()">⬇️ PDF — toute la classe</button>
+        </div>
+        <table class="sigma-table">
+          <thead><tr><th>Élève</th><th>Moyenne</th><th>Rang</th><th>Publié</th><th></th></tr></thead>
+          <tbody id="reportcards-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- Onglet Configuration académique ---------- -->
+    <section id="tab-configuration" style="display:none;">
+      <div class="panel">
+        <h3>Configuration de l'année scolaire</h3>
+        <p class="muted">Créez les niveaux, classes et affectations pédagogiques avant la saisie des évaluations.</p>
+        <div class="form-grid">
+          <div class="field"><label>Niveau</label><select id="cfg-level"></select></div>
+          <div class="field"><label>Nom de la classe</label><input id="cfg-class-name" placeholder="ex. SIL A, CE2 B" /></div>
+          <div class="field"><label>Capacité</label><input id="cfg-class-capacity" type="number" min="1" placeholder="40" /></div>
+        </div>
+        <button class="btn" onclick="createAcademicClass()">Créer la classe</button>
+        <div id="cfg-error" class="form-error"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Nouvelle matière</h3>
+        <div class="form-row">
+          <div class="field"><label>Matière</label><input id="cfg-subject-name" placeholder="ex. Mathématiques" /></div>
+          <div class="field"><label>Coefficient</label><input id="cfg-subject-coeff" type="number" min="0.1" step="0.5" value="1" /></div>
+          <button class="btn" onclick="createConfigSubject()">Ajouter</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Affecter un enseignant</h3>
+        <div class="form-grid">
+          <div class="field"><label>Classe</label><select id="cfg-class"></select></div>
+          <div class="field"><label>Matière</label><select id="cfg-subject"></select></div>
+          <div class="field"><label>Enseignant</label><select id="cfg-teacher"></select></div>
+          <div class="field"><label>Coefficient</label><input id="cfg-assignment-coeff" type="number" min="0.1" step="0.5" value="1" /></div>
+          <div class="field"><label>Heures / semaine</label><input id="cfg-weekly-hours" type="number" min="0" step="0.5" placeholder="2" /></div>
+        </div>
+        <button class="btn accent" onclick="createTeacherAssignment()">Affecter</button>
+        <div id="assignment-error" class="form-error"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Affectations de l'année</h3>
+        <table class="sigma-table"><thead><tr><th>Classe</th><th>Matière</th><th>Enseignant</th><th>Coeff.</th><th>H/sem.</th></tr></thead><tbody id="assignments-body"></tbody></table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+let currentAssessmentId = null;
+let currentAssessmentMax = 20;
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["subjects", "grades", "reportcards", "configuration"].forEach(t => {
+      document.getElementById("tab-" + t).style.display = (t === btn.dataset.tab) ? "block" : "none";
+    });
+  });
+});
+
+async function loadAcademicConfiguration() {
+  const ctx = Sigma.context.get();
+  if (!ctx.school_id || !ctx.academic_year_id) return;
+  const [levels, classes, subjects, teachers, assignments] = await Promise.all([
+    Sigma.api(`/api/levels?school_id=${ctx.school_id}`),
+    Sigma.api(`/api/classes?school_id=${ctx.school_id}&academic_year_id=${ctx.academic_year_id}`),
+    Sigma.api(`/api/subjects?school_id=${ctx.school_id}`),
+    Sigma.api(`/api/teachers?school_id=${ctx.school_id}`),
+    Sigma.api(`/api/teacher-assignments?academic_year_id=${ctx.academic_year_id}`),
+  ]);
+  document.getElementById("cfg-level").innerHTML = levels.map(x => `<option value="${Number(x.id)}">${Sigma.escapeHtml(x.name)}</option>`).join("") || `<option value="">Aucun niveau</option>`;
+  document.getElementById("cfg-class").innerHTML = classes.map(x => `<option value="${Number(x.id)}">${Sigma.escapeHtml(x.name)}</option>`).join("") || `<option value="">Aucune classe</option>`;
+  document.getElementById("cfg-subject").innerHTML = subjects.map(x => `<option value="${Number(x.id)}">${Sigma.escapeHtml(x.name)}</option>`).join("") || `<option value="">Aucune matière</option>`;
+  document.getElementById("cfg-teacher").innerHTML = teachers.map(x => `<option value="${Number(x.id)}">${Sigma.escapeHtml(x.name)}</option>`).join("") || `<option value="">Aucun utilisateur</option>`;
+  const classNames = Object.fromEntries(classes.map(x => [x.id, x.name]));
+  document.getElementById("assignments-body").innerHTML = assignments.length ? assignments.map(a => `<tr><td>${Sigma.escapeHtml(classNames[a.class_id] || "#"+a.class_id)}</td><td>${Sigma.escapeHtml(a.subject_name)}</td><td>${Sigma.escapeHtml(a.teacher_name)}</td><td>${Sigma.escapeHtml(a.coefficient ?? "—")}</td><td>${Sigma.escapeHtml(a.weekly_hours ?? "—")}</td></tr>`).join("") : `<tr><td colspan="5"><div class="empty-state">Aucune affectation.</div></td></tr>`;
+}
+
+async function createAcademicClass() {
+  const c=Sigma.context.get(), err=document.getElementById("cfg-error"); err.textContent="";
+  const level=Number(document.getElementById("cfg-level").value), name=document.getElementById("cfg-class-name").value.trim();
+  if(!level || !name || !c.academic_year_id){err.textContent="Niveau, année et nom de classe sont obligatoires.";return;}
+  try { await Sigma.postJson("/api/classes", {school_id:Number(c.school_id), academic_year_id:Number(c.academic_year_id), level_id:level, name, capacity:Number(document.getElementById("cfg-class-capacity").value)||null}); document.getElementById("cfg-class-name").value=""; Sigma.toast("Classe créée"); await loadAcademicConfiguration(); } catch(e){err.textContent=e.message;}
+}
+
+async function createConfigSubject() {
+  const c=Sigma.context.get(), name=document.getElementById("cfg-subject-name").value.trim(); if(!name){Sigma.toast("Le nom de la matière est obligatoire","error");return;}
+  try { await Sigma.postJson("/api/subjects", {school_id:Number(c.school_id), name, default_coefficient:Number(document.getElementById("cfg-subject-coeff").value)||1}); document.getElementById("cfg-subject-name").value=""; Sigma.toast("Matière ajoutée"); await loadSubjects(); await loadAcademicConfiguration(); } catch(e){Sigma.toast(e.message,"error");}
+}
+
+async function createTeacherAssignment() {
+  const c=Sigma.context.get(), err=document.getElementById("assignment-error"); err.textContent="";
+  const classId=Number(document.getElementById("cfg-class").value), subjectId=Number(document.getElementById("cfg-subject").value), teacherId=Number(document.getElementById("cfg-teacher").value);
+  if(!classId||!subjectId||!teacherId||!c.academic_year_id){err.textContent="Classe, matière, enseignant et année sont obligatoires.";return;}
+  try { await Sigma.postJson("/api/teacher-assignments", {academic_year_id:Number(c.academic_year_id), teacher_id:teacherId, subject_id:subjectId, class_id:classId, coefficient:Number(document.getElementById("cfg-assignment-coeff").value)||null, weekly_hours:Number(document.getElementById("cfg-weekly-hours").value)||null}); Sigma.toast("Affectation enregistrée"); await loadAcademicConfiguration(); } catch(e){err.textContent=e.message;}
+}
+
+async function loadSubjects() {
+  const ctx = Sigma.context.get();
+  const subjects = await Sigma.api(`/api/subjects?school_id=${ctx.school_id}`);
+  document.getElementById("subjects-body").innerHTML = subjects.length
+    ? subjects.map(s => `<tr><td>${Sigma.escapeHtml(s.name)}</td><td>${Sigma.escapeHtml(s.default_coefficient)}</td></tr>`).join("")
+    : `<tr><td colspan="2"><div class="empty-state">Aucune matière. Ajoutez-en une ci-dessus.</div></td></tr>`;
+
+  const select = document.getElementById("assessment-subject");
+  select.innerHTML = subjects.map(s => `<option value="${Number(s.id)}">${Sigma.escapeHtml(s.name)}</option>`).join("");
+}
+
+async function createSubject() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("subject-error");
+  errorBox.textContent = "";
+  const name = document.getElementById("subject-name").value;
+  if (!name) { errorBox.textContent = "Le nom est obligatoire."; return; }
+  try {
+    await Sigma.postJson("/api/subjects", {
+      school_id: Number(ctx.school_id), name, default_coefficient: Number(document.getElementById("subject-coeff").value) || 1,
+    });
+    document.getElementById("subject-name").value = "";
+    Sigma.toast("Matière ajoutée");
+    loadSubjects();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function loadAssessments() {
+  const ctx = Sigma.context.get();
+  if (!ctx.class_id || !ctx.academic_period_id) {
+    document.getElementById("assessments-body").innerHTML = `<tr><td colspan="5"><div class="empty-state">Sélectionnez une classe et une période dans la barre du haut.</div></td></tr>`;
+    return;
+  }
+  let assessments;
+  try {
+    assessments = await Sigma.api(`/api/assessments?class_id=${ctx.class_id}&academic_period_id=${ctx.academic_period_id}`);
+    if (window.SigmaOffline && navigator.onLine) for (const a of assessments) await SigmaOffline.assessmentPut(a).catch(()=>{});
+  } catch (e) {
+    assessments = window.SigmaOffline ? await SigmaOffline.assessmentAll(ctx.class_id, ctx.academic_period_id).catch(()=>[]) : [];
+    if (!assessments.length) throw e;
+  }
+  document.getElementById("assessments-body").innerHTML = assessments.length
+    ? assessments.map(a => `
+        <tr>
+          <td>${Sigma.escapeHtml(a.name)}</td><td>${Sigma.escapeHtml(a.assessment_type)}</td><td>${Sigma.escapeHtml(a.max_score)}</td><td>${Sigma.escapeHtml(a.coefficient)}</td>
+          <td><button class="btn ghost sm" data-grade-assessment-id="${Number(a.id)}" data-grade-max-score="${Number(a.max_score)}">Saisir les notes</button></td>
+        </tr>`).join("")
+    : `<tr><td colspan="5"><div class="empty-state">Aucune évaluation pour cette classe/période.</div></td></tr>`;
+  document.querySelectorAll("#assessments-body [data-grade-assessment-id]").forEach(btn => btn.addEventListener("click", () => {
+    const assessmentId = Number(btn.dataset.gradeAssessmentId);
+    const title = btn.closest("tr")?.querySelector("td")?.textContent || "";
+    openGradeEntry(assessmentId, title, Number(btn.dataset.gradeMaxScore || 20));
+  }));
+}
+
+async function createAssessment() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("assessment-error");
+  errorBox.textContent = "";
+  if (!ctx.class_id || !ctx.academic_period_id) { errorBox.textContent = "Sélectionnez une classe et une période."; return; }
+  try {
+    await Sigma.postJson("/api/assessments", {
+      academic_period_id: Number(ctx.academic_period_id),
+      subject_id: Number(document.getElementById("assessment-subject").value),
+      class_id: Number(ctx.class_id),
+      name: document.getElementById("assessment-name").value,
+      assessment_type: document.getElementById("assessment-type").value,
+      max_score: Number(document.getElementById("assessment-max").value) || 20,
+      coefficient: Number(document.getElementById("assessment-coeff").value) || 1,
+    });
+    document.getElementById("assessment-name").value = "";
+    Sigma.toast("Évaluation créée");
+    loadAssessments();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function openGradeEntry(assessmentId, name, maxScore) {
+  currentAssessmentId = assessmentId;
+  currentAssessmentMax = maxScore;
+  document.getElementById("grade-entry-panel").style.display = "block";
+  document.getElementById("grade-entry-title").textContent = "Saisie des notes — " + name;
+  document.getElementById("grade-max").textContent = maxScore;
+
+  let rows;
+  try {
+    rows = await Sigma.api(`/api/assessments/${assessmentId}/grades`);
+    if (window.SigmaOffline && navigator.onLine) {
+      await SigmaOffline.gradeRowsPut(assessmentId, rows).catch(()=>{});
+      await SigmaOffline.studentRowsPut(rows.map(r => ({id:r.student_id, matricule:r.matricule, first_name:r.student_name, last_name:'', name:r.student_name}))).catch(()=>{});
+    }
+  } catch (e) {
+    rows = window.SigmaOffline ? await SigmaOffline.gradeRowsGet(assessmentId).catch(()=>[]) : [];
+    if (!rows.length) throw e;
+  }
+  document.getElementById("grades-body").innerHTML = rows.map(r => `
+    <tr data-student-id="${r.student_id}" data-grade-state="${r.state || "draft"}">
+      <td>${Sigma.escapeHtml(r.matricule)}</td><td>${Sigma.escapeHtml(r.student_name)}</td>
+      <td><input type="number" step="0.25" min="0" max="${maxScore}" value="${r.score ?? ""}" class="grade-score" ${r.state === "locked" || r.state === "published" ? "disabled" : ""} /></td>
+      <td><input type="checkbox" class="grade-absent" ${r.is_absent ? "checked" : ""} ${r.state === "locked" ? "disabled" : ""} /></td>
+      <td><span class="badge ${r.state === "locked" ? "red" : r.state === "published" ? "green" : "blue"}">${r.state}</span></td>
+    </tr>`).join("");
+
+  document.getElementById("grade-entry-panel").scrollIntoView({ behavior: "smooth" });
+}
+
+async function saveGrades() {
+  if (!currentAssessmentId) return;
+  const payload = Array.from(document.querySelectorAll("#grades-body tr")).map(tr => ({
+    student_id: Number(tr.dataset.studentId),
+    score: tr.querySelector(".grade-score").value === "" ? null : Number(tr.querySelector(".grade-score").value),
+    is_absent: tr.querySelector(".grade-absent").checked,
+    state: tr.dataset.gradeState || "draft",
+  }));
+  try {
+    if (!navigator.onLine && window.SigmaOffline) {
+      await SigmaOffline.queueGradeBatch(currentAssessmentId, payload, currentAssessmentMax);
+      Sigma.toast("Notes enregistrées localement — synchronisation à la reconnexion");
+    } else {
+      await Sigma.api(`/api/assessments/${currentAssessmentId}/grades`, { method: "POST", body: JSON.stringify(payload) });
+      if (window.SigmaOffline) await SigmaOffline.gradeRowsPut(currentAssessmentId, payload).catch(()=>{});
+      Sigma.toast("Notes enregistrées");
+    }
+    openGradeEntry(currentAssessmentId, document.getElementById("grade-entry-title").textContent.replace("Saisie des notes — ", ""), currentAssessmentMax);
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function transitionGrades(toState) {
+  if (!currentAssessmentId) return;
+  try {
+    const gradeIds = await gradeIdsFor(currentAssessmentId);
+    if (!gradeIds.length) { Sigma.toast("Aucune note enregistrée à faire évoluer — enregistrez d'abord les notes.", "error"); return; }
+    await Sigma.postJson("/api/grades/transition", { grade_ids: gradeIds, to_state: toState });
+    Sigma.toast(`Notes -> ${toState}`);
+    const title = document.getElementById("grade-entry-title").textContent.replace("Saisie des notes — ", "");
+    openGradeEntry(currentAssessmentId, title, currentAssessmentMax);
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function gradeIdsFor(assessmentId) {
+  const rows = await Sigma.api(`/api/assessments/${assessmentId}/grades`);
+  return rows.filter(r => r.grade_id != null).map(r => r.grade_id);
+}
+
+async function loadRanking() {
+  const ctx = Sigma.context.get();
+  if (!ctx.class_id || !ctx.academic_period_id) {
+    document.getElementById("ranking-body").innerHTML = `<tr><td colspan="3"><div class="empty-state">Sélectionnez une classe et une période.</div></td></tr>`;
+    return;
+  }
+  const [ranking, students] = await Promise.all([
+    Sigma.api(`/api/classes/${ctx.class_id}/ranking?academic_period_id=${ctx.academic_period_id}`),
+    Sigma.api(`/api/classes/${ctx.class_id}/students`),
+  ]);
+  const nameById = Object.fromEntries(students.map(s => [s.id, `${Sigma.escapeHtml(s.first_name)} ${Sigma.escapeHtml(s.last_name)}`]));
+  document.getElementById("ranking-body").innerHTML = ranking.length
+    ? ranking.map(r => `<tr><td>${r.rank}</td><td>${nameById[r.student_id] || Sigma.escapeHtml("#" + r.student_id)}</td><td>${r.average.toFixed(2)}</td></tr>`).join("")
+    : `<tr><td colspan="3"><div class="empty-state">Aucune moyenne calculable pour l'instant.</div></td></tr>`;
+}
+
+async function generateReportCards() {
+  const ctx = Sigma.context.get();
+  if (!ctx.class_id || !ctx.academic_period_id) { Sigma.toast("Sélectionnez une classe et une période", "error"); return; }
+  try {
+    const res = await Sigma.postJson(`/api/report-cards/generate?class_id=${ctx.class_id}&academic_period_id=${ctx.academic_period_id}`, {});
+    Sigma.toast(`${res.generated} bulletin(s) généré(s)`);
+    loadReportCards();
+    loadRanking();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function loadReportCards() {
+  const ctx = Sigma.context.get();
+  if (!ctx.class_id || !ctx.academic_period_id) return;
+  const cards = await Sigma.api(`/api/classes/${ctx.class_id}/report-cards?academic_period_id=${ctx.academic_period_id}`);
+  document.getElementById("reportcards-body").innerHTML = cards.length
+    ? cards.map(c => `
+        <tr>
+          <td>${Sigma.escapeHtml(c.student_name)}</td>
+          <td>${c.general_average != null ? c.general_average.toFixed(2) : "—"}</td>
+          <td>${c.class_rank ? c.class_rank + " / " + c.class_size : "—"}</td>
+          <td>${c.is_published ? '<span class="badge green">Publié</span>' : '<span class="badge grey">Brouillon</span>'}</td>
+          <td>
+            ${!c.is_published ? `<button class="btn ghost sm" data-publish-report-card="${Number(c.id)}">Publier</button>` : ""}
+            <button class="btn ghost sm" data-download-report-card="${Number(c.id)}" data-report-student-name="${encodeURIComponent(String(c.student_name || "eleve"))}">PDF</button>
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="5"><div class="empty-state">Aucun bulletin généré. Cliquez sur "Générer les bulletins".</div></td></tr>`;
+  document.querySelectorAll("#reportcards-body [data-publish-report-card]").forEach(btn => btn.addEventListener("click", () => publishReportCard(Number(btn.dataset.publishReportCard))));
+  document.querySelectorAll("#reportcards-body [data-download-report-card]").forEach(btn => btn.addEventListener("click", async () => {
+    const id = Number(btn.dataset.downloadReportCard);
+    const filename = `bulletin_${decodeURIComponent(btn.dataset.reportStudentName || "eleve").replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
+    await Sigma.downloadBlob(`/api/report-cards/${id}/pdf`, filename);
+  }));
+}
+
+async function publishReportCard(id) {
+  try { await Sigma.postJson(`/api/report-cards/${id}/publish`, {}); Sigma.toast("Bulletin publié"); loadReportCards(); }
+  catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function downloadClassReportCardsPdf() {
+  const ctx = Sigma.context.get();
+  if (!ctx.class_id || !ctx.academic_period_id) { Sigma.toast("Sélectionnez une classe et une période", "error"); return; }
+  try {
+    await Sigma.downloadBlob(`/api/classes/${ctx.class_id}/report-cards/pdf?academic_period_id=${ctx.academic_period_id}`, `bulletins_classe_${ctx.class_id}.pdf`);
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function refreshAll() {
+  await loadSubjects();
+  await loadAcademicConfiguration();
+  await loadAssessments();
+  await loadRanking();
+  await loadReportCards();
+  document.getElementById("grade-entry-panel").style.display = "none";
+  currentAssessmentId = null;
+}
+
+Sigma.boot("/dashboard/academic.html", async () => {
+  await Sigma.renderContextBar("context-bar", { showClass: true, showPeriod: true }, refreshAll);
+});
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/dashboard/sw.js").catch(()=>{});}</script></body>
+</html>

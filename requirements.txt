@@ -1,0 +1,39 @@
+# --- Noyau web ---
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+python-multipart>=0.0.9,<1
+
+# --- Validation / configuration ---
+pydantic>=2.7,<3
+pydantic-settings>=2.2,<3
+# Requis par pydantic.EmailStr (app/schemas/security.py). Sans ce paquet,
+# `import app.main` lève ImportError et l'exécutable gelé ne démarre pas.
+email-validator>=2.1,<3
+
+# --- Base de données ---
+sqlalchemy>=2.0,<3
+alembic>=1.13,<2
+# Driver PostgreSQL officiel SQLAlchemy 2.x pour le profil cloud/enterprise.
+psycopg[binary]>=3.2,<4
+
+# --- Sécurité ---
+python-jose[cryptography]>=3.3,<4
+bcrypt>=4.1,<5
+# Utilisé explicitement par app/services/update_agent.py (signatures ed25519).
+cryptography>=42,<47
+
+# --- Documents / médias ---
+openpyxl>=3.1,<4
+reportlab>=4.0,<5
+pillow>=10,<13
+qrcode>=7.4,<9
+pypdf>=5.0,<7
+python-docx>=1.1,<2
+
+# --- Cache / rate limiting distribué ---
+redis>=5,<8
+
+# --- Intégrations réseau ---
+pywebpush>=2.0,<3
+# Requis par app/services/sms_gateway.py en mode SMS_GATEWAY_MODE=http.
+httpx>=0.27,<1

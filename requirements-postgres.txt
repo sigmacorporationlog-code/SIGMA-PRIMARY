@@ -1,0 +1,3 @@
+# Profil PostgreSQL/enterprise de SIGMA.
+# Les dépendances applicatives communes sont installées depuis requirements.txt.
+-r requirements.txt

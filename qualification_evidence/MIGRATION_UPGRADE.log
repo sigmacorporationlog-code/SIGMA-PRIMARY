@@ -1,0 +1,46 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260913_1600, SIGMA initial schema baseline. Creates the pre-V1.7 core schema.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_1600 -> 20260913_1700, SIGMA 1.7 — sync devices, operation journal and entity versions.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_1700 -> 20260913_2000, SIGMA 2.0 — identités client/serveur pour créations offline.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2000 -> 20260913_2100, SIGMA 2.1 — synchronisation des inscriptions hors ligne.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2100 -> 20260913_2200, sync v2.2 delivery acknowledgements
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2200 -> 20260913_2300, sync v2.3 academic grade protocol
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2300 -> 20260913_2400, v2.4: synchronisation contrôlée des transitions d'état des notes.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2400 -> 20260913_2500, v2.5: fiabilisation de la reprise des lots de synchronisation.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2500 -> 20260913_2600, v2.6: traçabilité et résolution explicite des conflits de synchronisation.
+INFO  [alembic.runtime.migration] Running upgrade 20260913_2600 -> 20260914_3000, SIGMA V3 Foundation: notifications, push subscriptions, communication preferences.
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3000 -> 20260914_3100, SIGMA Connect 3.1.0: campaigns, templates and delivery tracking.
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3100 -> 20260914_3300, SIGMA V3 finance foundation
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3300 -> 20260914_3400, SIGMA V3 documents and bulk export jobs
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3400 -> 20260914_3500, SIGMA BADGE 3.5 lifecycle fields
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3500 -> 20260914_3700, SIGMA V3 Cloud/Offline/Sync health state
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3700 -> 20260914_3800, SIGMA V3.8 Cloud commercial, licence et audit chain
+INFO  [alembic.runtime.migration] Running upgrade 20260914_3800 -> 20260914_4000, SIGMA V4 Cloud control plane, plans and usage snapshots.
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4000 -> 20260914_4100, SIGMA V4.1 billing and legal acceptance layer.
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4100 -> 20260914_4200, billing automation and subscription grace controls
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4200 -> 20260914_4300, SIGMA Intelligence foundation
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4300 -> 20260914_4400, SIGMA AI Action Center
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4400 -> 20260914_4500, SIGMA AI execution engine
+INFO  [alembic.runtime.migration] Running upgrade 20260914_4500 -> 20260915_4600, SIGMA V4.12 — base documentaire RAG institutionnelle.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_4600 -> 20260915_4700, SIGMA V4.13 — provenance et activation des versions documentaires.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_4700 -> 20260915_4800, SIGMA V4.14 — gouvernance documentaire et retrieval hybride.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_4800 -> 20260915_4900, SIGMA V4.18 — onboarding établissement.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_4900 -> 20260915_5000, SIGMA V4.19 — Control Center operations and incidents.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_5000 -> 20260915_5100, SIGMA V4.22 — Signed payment gateway webhook inbox.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_5100 -> 20260915_5200, SIGMA V4.25 — Token revocation versioning.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_5200 -> 20260915_5300, SIGMA V4.40 — fleet inventory and safe rollout state.
+INFO  [alembic.runtime.migration] Running upgrade 20260915_5300 -> 20260916_5400, SIGMA V4.46 — password recovery and forced password change.
+INFO  [alembic.runtime.migration] Running upgrade 20260916_5400 -> 20260916_5500, SIGMA V4.46 — configurable student matricule sequence.
+INFO  [alembic.runtime.migration] Running upgrade 20260916_5500 -> 20260916_5600, SIGMA V4.46 — atomic badge numbering.
+INFO  [alembic.runtime.migration] Running upgrade 20260916_5600 -> 20260916_5700, Bind offline sync devices to the registering user.
+INFO  [alembic.runtime.migration] Running upgrade 20260916_5700 -> 20260918_5800, SIGMA V4.47 — canal de communication par défaut de l'établissement.
+INFO  [alembic.runtime.migration] Running upgrade 20260918_5800 -> 20260919_5900, SIGMA V4.48 — destinations cloud de sauvegarde (Google Drive, OneDrive, Dropbox).
+INFO  [alembic.runtime.migration] Running upgrade 20260919_5900 -> 20260920_6000, SIGMA V4.46 hardening: indexes for high-volume school workflows.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6000 -> 20260920_6100, SIGMA V4.46.0 H2 — exact monetary values and payment idempotency.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6100 -> 20260920_6200, SIGMA V4.46.0 H3 — configurable letter grades and GPA points.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6200 -> 20260920_6300, SIGMA P2 — authoritative RBAC catalog and read/import/export permissions.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6300 -> 20260920_6310, Harden honor board history with uniqueness and lookup indexes.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6310 -> 20260920_6320, Use NUMERIC for academic/evaluation scores, coefficients and percentages.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6320 -> 20260920_6330, Configurable GPA calculation mode; preserves historical overall-scale behavior.
+INFO  [alembic.runtime.migration] Running upgrade 20260920_6330 -> 20260920_6340, Persist honor-board scope and validation audit snapshot.

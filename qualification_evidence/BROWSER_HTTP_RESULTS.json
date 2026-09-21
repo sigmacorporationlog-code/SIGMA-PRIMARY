@@ -1,0 +1,170 @@
+[
+  {
+    "page": "academic.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/academic.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/academic.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "administration.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/administration.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/administration.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "ai-control.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/ai-control.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/ai-control.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "ai-knowledge.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/ai-knowledge.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/ai-knowledge.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "cards.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/cards.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/cards.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "change-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/change-password.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/change-password.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "communication.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/communication.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/communication.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "evaluations.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/evaluations.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/evaluations.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "finance.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/finance.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/finance.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "forgot-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/forgot-password.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/forgot-password.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "honor-board.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/honor-board.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/honor-board.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "index.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/index.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/index.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "insight.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/insight.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/insight.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "licenses.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/licenses.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/licenses.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "operations.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/operations.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/operations.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "parent.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/parent.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/parent.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "pilot.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/pilot.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/pilot.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "reset-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/reset-password.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/reset-password.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "student360.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/student360.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/student360.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "students.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/students.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/students.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "teacher.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:8787/teacher.html\nCall log:\n  - navigating to \"http://127.0.0.1:8787/teacher.html\", waiting until \"networkidle\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  }
+]

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Licences</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+<style>
+.license-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin-bottom: 20px; }
+.license-summary .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.license-summary .card .value { font-size: 26px; font-weight: 800; color: var(--primary); }
+.license-summary .card .label { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.status-pill { padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; display: inline-block; }
+.status-pill.active { background: var(--success-bg); color: var(--primary-dark); }
+.status-pill.trial { background: var(--info-bg); color: var(--info); }
+.status-pill.suspended { background: var(--warning-bg); color: var(--warning); }
+.status-pill.expired { background: var(--danger-bg); color: var(--danger); }
+.license-key-box { font-family: monospace; font-size: 14px; background: var(--success-bg); border: 1px dashed var(--primary); border-radius: 8px; padding: 12px; margin-top: 10px; word-break: break-all; user-select: all; }
+@media (max-width: 900px) { .license-summary { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Licences</h2>
+    <p class="page-subtitle">Pilotage commercial de tous les établissements SIGMA — émission et suivi des licences</p>
+
+    <div id="superadmin-guard" class="empty-state" style="display:none;">Cette page est réservée au superadministrateur SIGMA.</div>
+
+    <div id="license-content">
+      <div class="license-summary" id="license-summary"></div>
+
+      <div class="panels-grid">
+        <div class="panel">
+          <h3>Émettre une licence</h3>
+          <div class="form-grid">
+            <div class="field"><label>Établissement</label>
+              <select id="issue-school"></select>
+            </div>
+            <div class="field"><label>Plan commercial</label>
+              <select id="issue-plan"></select>
+            </div>
+            <div class="field"><label>Durée (jours)</label><input id="issue-days" type="number" value="365" min="1" max="3650" /></div>
+          </div>
+          <button class="btn" onclick="issueLicense()">Émettre la clé</button>
+          <div id="issue-error" class="form-error"></div>
+          <div id="issue-result" style="display:none;">
+            <p style="margin:12px 0 0;font-size:13px;">Clé émise — <strong>notez-la maintenant</strong>, elle ne sera plus jamais affichée en clair. Transmettez-la à l'établissement pour activation dans <em>Administration → Licence / abonnement</em>.</p>
+            <div class="license-key-box" id="issue-key"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Plans commerciaux</h3>
+          <div id="plans-list"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:20px;">
+        <div class="form-row" style="justify-content:space-between;">
+          <h3 style="margin:0;">Établissements</h3>
+          <button class="btn ghost sm" onclick="loadControlPlane()">Actualiser</button>
+        </div>
+        <table class="sigma-table" style="margin-top:12px;">
+          <thead><tr><th>Établissement</th><th>Plan</th><th>Statut</th><th>Échéance</th><th>Utilisateurs</th><th>Élèves</th></tr></thead>
+          <tbody id="schools-body"><tr><td colspan="6"><div class="empty-state">Chargement…</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+function esc(v) { return Sigma.escapeHtml(v); }
+const STATUS_LABELS = { trial: "Essai", active: "Active", suspended: "Suspendue", expired: "Expirée" };
+
+async function loadPlans() {
+  const data = await Sigma.api("/api/cloud/plans");
+  const select = document.getElementById("issue-plan");
+  select.innerHTML = data.items.map(p => `<option value="${esc(p.code)}">${esc(p.name)} (${esc(p.max_users)} util. / ${esc(p.max_students)} élèves)</option>`).join("");
+  document.getElementById("plans-list").innerHTML = data.items.map(p => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <strong>${esc(p.name)}</strong> <span style="color:var(--text-muted);font-size:12px;">(${esc(p.code)})</span>
+      <div style="font-size:12.5px;color:var(--text-muted);">${esc(p.description || "")}</div>
+      <div style="font-size:12.5px;margin-top:4px;">Jusqu'à ${esc(p.max_users)} utilisateurs · ${esc(p.max_students)} élèves</div>
+    </div>`).join("") || '<div class="empty-state">Aucun plan configuré.</div>';
+}
+
+async function loadControlPlane() {
+  const tbody = document.getElementById("schools-body");
+  const summary = document.getElementById("license-summary");
+  try {
+    const data = await Sigma.api("/api/cloud/control-plane");
+    const c = data.counts;
+    summary.innerHTML = [
+      ["Établissements", c.total],
+      ["Actifs", c.active],
+      ["Suspendus", c.suspended],
+      ["Expirés", c.expired],
+    ].map(([label, value]) => `<div class="card"><div class="value">${esc(value)}</div><div class="label">${esc(label)}</div></div>`).join("");
+
+    const schoolSelect = document.getElementById("issue-school");
+    schoolSelect.innerHTML = data.schools.map(x => `<option value="${esc(x.school.id)}">${esc(x.school.name)}</option>`).join("");
+
+    tbody.innerHTML = data.schools.length ? data.schools.map(x => {
+      const s = x.subscription;
+      return `<tr>
+        <td>${esc(x.school.name)}</td>
+        <td>${esc(s.plan)}</td>
+        <td><span class="status-pill ${esc(s.status)}">${esc(STATUS_LABELS[s.status] || s.status)}</span></td>
+        <td>${s.ends_on ? esc(s.ends_on) + (s.days_remaining != null ? ` (${esc(s.days_remaining)} j)` : "") : "—"}</td>
+        <td>${esc(s.usage.users)} / ${esc(s.limits.users)}</td>
+        <td>${esc(s.usage.students)} / ${esc(s.limits.students)}</td>
+      </tr>`;
+    }).join("") : '<tr><td colspan="6"><div class="empty-state">Aucun établissement.</div></td></tr>';
+  } catch (e) {
+    if (String(e.message || "").includes("réservé")) {
+      document.getElementById("superadmin-guard").style.display = "block";
+      document.getElementById("license-content").style.display = "none";
+    } else {
+      Sigma.toast(e.message, "error");
+    }
+  }
+}
+
+async function issueLicense() {
+  const errorBox = document.getElementById("issue-error");
+  errorBox.textContent = "";
+  const school_id = Number(document.getElementById("issue-school").value);
+  const plan_code = document.getElementById("issue-plan").value;
+  const days = Number(document.getElementById("issue-days").value);
+  if (!school_id) { errorBox.textContent = "Sélectionnez un établissement."; return; }
+  try {
+    const result = await Sigma.api("/api/cloud/license/issue", { method: "POST", body: JSON.stringify({ school_id, plan_code, days }) });
+    document.getElementById("issue-key").textContent = result.license_key;
+    document.getElementById("issue-result").style.display = "block";
+    Sigma.toast("Licence émise.");
+    loadControlPlane();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+Sigma.boot("/dashboard/licenses.html", async () => {
+  if (!Sigma._user || !Sigma._user.is_superadmin) {
+    document.getElementById("superadmin-guard").style.display = "block";
+    document.getElementById("license-content").style.display = "none";
+    return;
+  }
+  await Promise.all([loadPlans(), loadControlPlane()]);
+});
+</script>
+</body>
+</html>

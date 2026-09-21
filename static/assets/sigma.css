@@ -1,0 +1,333 @@
+/* ============================================================
+   SIGMA — Design system partagé
+   Charte graphique: vert forêt #11633A, orange vif #FF8A00
+   Typographie: Exo 2 (titres/marque) + Montserrat (texte courant)
+   ============================================================ */
+
+:root {
+  --primary: #11633A;
+  --primary-dark: #0c4a2b;
+  --accent: #FF8A00;
+  --bg: #f4f6f5;
+  --card: #ffffff;
+  --border: #e3e7e5;
+  --text: #1c2b24;
+  --text-muted: #6b7570;
+  --danger: #c0392b;
+  --danger-bg: #fdecea;
+  --warning: #b9770e;
+  --warning-bg: #fff6e5;
+  --info: #1f618d;
+  --info-bg: #eaf3ff;
+  --success-bg: #eafaf0;
+  --font-brand: 'Exo 2', 'Segoe UI', Arial, sans-serif;
+  --font-body: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  --radius: 10px;
+  --shadow: 0 1px 6px rgba(0,0,0,.06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3, h4, .brand-font { font-family: var(--font-brand); }
+
+a { color: var(--primary); }
+
+/* ---------- Menu latéral (remplace l'ancienne barre horizontale) ---------- */
+
+:root { --sidebar-w: 236px; }
+
+.sigma-sidebar {
+  position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white; display: flex; flex-direction: column; z-index: 200;
+  box-shadow: 2px 0 14px rgba(0,0,0,.12); overflow-y: auto;
+}
+.sigma-sidebar-brand {
+  display: flex; align-items: center; gap: 10px; padding: 18px 18px 16px;
+  border-bottom: 3px solid var(--accent);
+}
+.sigma-sidebar-brand img { height: 36px; width: 36px; object-fit: contain; border-radius: 8px; background: white; padding: 3px; flex-shrink: 0; }
+.sigma-sidebar-brand .name { font-family: var(--font-brand); font-size: 17px; font-weight: 700; letter-spacing: .3px; line-height: 1.1; }
+.sigma-sidebar-brand .tag { font-size: 10px; opacity: .75; letter-spacing: .2px; }
+.sigma-network-status {
+  display: block; margin: 10px 18px 0; font-size: 10.5px; opacity: .8;
+  padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,.12); width: fit-content;
+}
+.sigma-sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; }
+.sigma-sidebar-nav a {
+  color: white; text-decoration: none; font-size: 13px; padding: 10px 18px;
+  opacity: .82; border-left: 3px solid transparent; transition: background .15s, opacity .15s;
+}
+.sigma-sidebar-nav a:hover { opacity: 1; background: rgba(255,255,255,.08); }
+.sigma-sidebar-nav a.active { opacity: 1; background: rgba(255,255,255,.14); border-left-color: var(--accent); font-weight: 600; }
+/* Les info-bulles génériques [data-tip] s'affichent au-dessus de l'élément
+   (voir plus bas) : dans un menu vertical qui défile, ça les ferait
+   dépasser en haut de la barre et se faire couper par son overflow-y. On
+   les fait apparaître à droite du lien à la place, comme dans la plupart
+   des menus latéraux. */
+.sigma-sidebar-nav a[data-tip]::after { bottom: auto; top: 50%; left: calc(100% + 10px); transform: translateY(-50%); }
+.sigma-sidebar-nav a[data-tip]::before {
+  content: ""; position: absolute; bottom: auto; top: 50%; left: calc(100% + 2px);
+  transform: translateY(-50%); border: 5px solid transparent;
+  border-top-color: transparent; border-right-color: var(--text, #1f2937);
+}
+.sigma-sidebar-user {
+  padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.18); font-size: 12px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.sigma-sidebar-user .who { display: flex; align-items: center; gap: 8px; opacity: .9; overflow: hidden; }
+.sigma-sidebar-user .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sigma-school-logo { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+.sigma-sidebar-user button.logout {
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); color: white; padding: 8px 10px;
+  border-radius: 7px; font-size: 12px; cursor: pointer; font-family: var(--font-body); width: 100%;
+}
+.sigma-sidebar-user button.logout:hover { background: rgba(255,255,255,.24); }
+
+/* Décale le contenu principal de la largeur du menu latéral, uniquement une
+   fois connecté (avant, #sigma-header est vide et l'écran de connexion doit
+   rester centré sans ce décalage). */
+body.sigma-authed #main-screen,
+body.sigma-authed .sigma-footer { margin-left: var(--sidebar-w); }
+
+/* En dessous de ~880px (tablette/téléphone — portails parent/enseignant
+   notamment) : le menu latéral redevient une barre horizontale classique
+   plutôt que de manger l'essentiel d'un petit écran. */
+@media (max-width: 880px) {
+  .sigma-sidebar {
+    position: static; width: auto; height: auto; flex-direction: row; align-items: center;
+    flex-wrap: wrap; padding: 8px 12px; box-shadow: none;
+  }
+  .sigma-sidebar-brand { border-bottom: none; padding: 4px 10px 4px 0; }
+  .sigma-network-status { margin: 0 8px; }
+  .sigma-sidebar-nav { flex-direction: row; flex-wrap: wrap; padding: 4px 0; flex: 1 1 auto; }
+  .sigma-sidebar-nav a { border-left: none; border-radius: 6px; padding: 6px 10px; }
+  .sigma-sidebar-nav a.active { border-left: none; }
+  .sigma-sidebar-user { flex-direction: row; align-items: center; border-top: none; padding: 4px 0; }
+  .sigma-sidebar-user button.logout { width: auto; }
+  body.sigma-authed #main-screen,
+  body.sigma-authed .sigma-footer { margin-left: 0; }
+}
+
+/* ---------- Connexion ---------- */
+
+.login-screen {
+  max-width: 380px; margin: 10vh auto; background: var(--card); padding: 32px;
+  border-radius: var(--radius); box-shadow: 0 4px 24px rgba(0,0,0,.1);
+}
+.login-screen .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.login-screen .brand-row img { height: 48px; width: 48px; border-radius: 8px; }
+.login-screen h2 { margin: 0; color: var(--primary); font-size: 20px; }
+.login-screen input {
+  width: 100%; padding: 11px 12px; margin-bottom: 12px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; font-family: var(--font-body);
+}
+.login-screen input:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+.login-screen button.btn { width: 100%; padding: 11px; font-size: 14px; }
+#login-error, .form-error { color: var(--danger); font-size: 13px; min-height: 18px; margin-top: 4px; }
+
+/* ---------- Structure ---------- */
+
+.sigma-main { padding: 22px 24px; max-width: 1400px; margin: 0 auto; }
+.page-title { font-size: 20px; color: var(--primary); margin: 0 0 4px 0; }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin: 0 0 20px 0; }
+
+/* ---------- Barre de contexte (école / année / classe / période) ---------- */
+
+.context-bar {
+  display: flex; flex-wrap: wrap; gap: 14px; background: var(--card); padding: 14px 18px;
+  border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; align-items: end;
+}
+.context-bar .field { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.context-bar label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
+
+/* ---------- Formulaires génériques ---------- */
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+label { font-size: 12px; color: var(--text-muted); }
+input, select, textarea {
+  padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13.5px;
+  font-family: var(--font-body); background: white; color: var(--text);
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 14px; }
+
+/* ---------- Boutons ---------- */
+
+.btn {
+  background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 7px;
+  cursor: pointer; font-size: 13px; font-family: var(--font-body); font-weight: 500;
+  transition: opacity .15s, transform .05s;
+}
+.btn:hover { opacity: .9; }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.accent { background: var(--accent); }
+.btn.ghost { background: white; color: var(--primary); border: 1px solid var(--primary); }
+.btn.ghost:hover { background: var(--success-bg); }
+.btn.danger { background: var(--danger); }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
+
+/* ---------- Cartes / panneaux ---------- */
+
+.panel {
+  background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.panel h3 { margin: 0 0 14px 0; color: var(--primary); font-size: 15px; }
+.panels-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; }
+@media (max-width: 960px) { .panels-grid { grid-template-columns: 1fr; } }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.kpi {
+  background: var(--card); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow);
+  border-top: 3px solid var(--primary); transition: transform .15s, box-shadow .15s; cursor: pointer;
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(17,99,58,.14); }
+.kpi.accent { border-top-color: var(--accent); }
+.kpi .value { font-family: var(--font-brand); font-size: 26px; font-weight: 700; color: var(--primary); }
+.kpi .label { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .3px; }
+
+/* ---------- Graphique en anneau (donut) — sans dépendance externe ---------- */
+
+.donut-panel { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.donut {
+  --donut-size: 150px;
+  width: var(--donut-size); height: var(--donut-size); border-radius: 50%;
+  background: conic-gradient(var(--donut-gradient, var(--primary) 0 100%));
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.donut-center {
+  width: 62%; height: 62%; border-radius: 50%; background: var(--card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.donut-center .donut-total { font-family: var(--font-brand); font-size: 22px; font-weight: 700; color: var(--primary); }
+.donut-center .donut-total-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+.donut-legend { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 8px; }
+.donut-legend-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+.donut-legend-row .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 7px; flex-shrink: 0; }
+.donut-legend-row .name { display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.donut-legend-row .val { font-weight: 700; color: var(--text); }
+
+/* ---------- Tableaux ---------- */
+
+table.sigma-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+table.sigma-table th, table.sigma-table td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+table.sigma-table th { background: var(--primary); color: white; font-family: var(--font-brand); font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; }
+table.sigma-table tr:hover td { background: #fafdfb; }
+table.sigma-table td input[type=number] { width: 80px; }
+
+.badge { font-size: 11px; padding: 2px 9px; border-radius: 10px; display: inline-block; }
+.badge.green { background: var(--success-bg); color: var(--primary); }
+.badge.orange { background: #fff2e0; color: #b9660a; }
+.badge.blue { background: var(--info-bg); color: var(--info); }
+.badge.red { background: var(--danger-bg); color: var(--danger); }
+.badge.grey { background: #eee; color: #666; }
+
+/* ---------- Alertes / notifications ---------- */
+
+.alert-item { padding: 10px 12px; border-radius: 7px; margin-bottom: 8px; font-size: 13px; }
+.alert-item.critical { background: var(--danger-bg); color: var(--danger); }
+.alert-item.warning { background: var(--warning-bg); color: var(--warning); }
+.alert-item.info { background: var(--info-bg); color: var(--info); }
+.no-alert { color: var(--text-muted); font-size: 13px; }
+
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 12px 16px; border-radius: 8px; font-size: 13px; color: white; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  animation: toast-in .2s ease-out;
+}
+.toast.success { background: var(--primary); }
+.toast.error { background: var(--danger); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- Divers ---------- */
+
+.pagination { display: flex; gap: 8px; margin-top: 14px; align-items: center; font-size: 13px; }
+.hidden-input { display: none; }
+.tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 2px solid var(--border); }
+.tabs button {
+  background: none; border: none; padding: 10px 16px; font-size: 13.5px; font-family: var(--font-brand);
+  cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px;
+}
+.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
+.empty-state { text-align: center; color: var(--text-muted); font-size: 13px; padding: 30px; }
+.sigma-footer { text-align: center; padding: 18px; font-size: 11px; color: #999; }
+.photo-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #ddd; display: block; cursor: pointer; border: 1px solid #ccc; }
+.photo-thumb.placeholder { display: flex; align-items: center; justify-content: center; font-size: 10px; color: #888; }
+.sigma-network-status{font-size:12px;padding:4px 8px;border-radius:12px;border:1px solid rgba(0,0,0,.12);white-space:nowrap}.sigma-network-status.pending,.sigma-network-status.cached{font-weight:600}.sigma-network-status.online{opacity:.8}
+
+.action-panel { border-top: 3px solid var(--primary); }
+.panel-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.panel-heading h3 { margin:0; }
+.panel-hint { margin:4px 0 0; color:var(--text-muted); font-size:12px; }
+.action-total { min-width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:var(--primary); color:#fff; font-weight:800; }
+.action-items { margin-top:14px; display:grid; gap:10px; }
+.action-item { display:flex; align-items:center; gap:14px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--card); }
+.action-item.critical { border-left:4px solid var(--danger); }
+.action-item.warning { border-left:4px solid var(--warning); }
+.action-item.info { border-left:4px solid var(--info); }
+.action-count { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border-radius:10px; background:var(--bg-soft,#f3f4f6); font-weight:800; font-size:17px; }
+.action-body { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
+.action-body strong { font-size:14px; }
+.action-body span { color:var(--text-muted); font-size:12px; }
+.action-btn { white-space:nowrap; text-decoration:none; }
+.action-empty { padding:16px; }
+@media (max-width: 720px) { .action-item { align-items:flex-start; flex-wrap:wrap; } .action-btn { margin-left:56px; } }
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.kpi{padding:14px;border:1px solid var(--border,#ddd);border-radius:12px;background:var(--surface,#fff)}.kpi span{display:block;color:#777;font-size:.82rem}.kpi b{font-size:1.45rem}.stack{display:flex;flex-direction:column;gap:8px}.list-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border,#ddd);border-radius:10px;background:var(--surface,#fff)}.badge.danger{background:#fee2e2;color:#991b1b}@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.list-row{align-items:flex-start;flex-direction:column}}
+
+/* ---------- Info-bulles au survol (CSS pur, pas de JS) ----------
+   Usage: ajouter data-tip="texte d'aide" sur n'importe quel élément
+   (bouton, icône, champ...). Fonctionne aussi au focus clavier pour
+   rester accessible. Ne remplace pas title="" (lu par les lecteurs
+   d'écran) — les deux peuvent coexister sur le même élément. */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--text, #1f2937);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  max-width: 260px;
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease, transform .12s ease;
+  z-index: 60;
+}
+[data-tip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--text, #1f2937);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+  z-index: 60;
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after,
+[data-tip]:hover::before, [data-tip]:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -1,0 +1,14 @@
+OS=Debian GNU/Linux 13 (trixie) x86_64
+CPU=3
+Python=3.13.5
+pip=25.1.1
+Node=22.16.0
+npm=10.9.2
+Chromium=144.0.7559.96
+Java=OpenJDK 21.0.11
+PostgreSQL client/server=missing (pg_config only)
+Redis client/server=missing
+Docker=missing
+Android SDK/adb=missing
+Gradle executable=missing; Gradle wrapper declared 8.9 but distribution download blocked
+pytest=9.0.2 (project constraint <9; WRONG_VERSION for release qualification)

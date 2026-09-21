@@ -1,0 +1,3 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20260920_6340 -> 20260920_6330, Persist honor-board scope and validation audit snapshot.

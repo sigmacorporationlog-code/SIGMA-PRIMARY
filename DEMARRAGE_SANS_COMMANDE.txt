@@ -1,0 +1,7 @@
+SIGMA — COMPILATION SANS COMMANDE
+
+1. Double-cliquez sur BUILD_SIGMA_WINDOWS.vbs.
+2. Attendez la boîte de dialogue finale.
+3. En cas d’échec, le journal est automatiquement placé dans release_out\build_logs.
+
+Aucune commande PowerShell, Python ou pip ne doit être saisie manuellement.

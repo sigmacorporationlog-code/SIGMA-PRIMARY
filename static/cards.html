@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Cartes</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Cartes d'accès</h2>
+    <p class="page-subtitle">Modèles de carte, émission, révocation, impression avec QR code</p>
+
+    <div id="context-bar"></div>
+
+    <div class="panels-grid">
+      <div class="panel">
+        <h3>Modèles de carte</h3>
+        <div class="form-grid">
+          <div class="field"><label>Nom</label><input id="template-name" placeholder="ex: Carte scolaire standard" /></div>
+          <div class="field"><label>Type</label>
+            <select id="template-type"><option value="student_id">Élève</option><option value="staff_id">Personnel</option></select>
+          </div>
+          <div class="field"><label>Couleur principale</label><input id="template-primary" type="color" value="#11633A" /></div>
+          <div class="field"><label>Couleur accent</label><input id="template-accent" type="color" value="#FF8A00" /></div>
+        </div>
+        <label style="display:inline-flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="template-qr" checked /> Afficher le QR code</label>
+        &nbsp;&nbsp;
+        <label style="display:inline-flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="template-photo" checked /> Afficher la photo</label>
+        <br /><br />
+        <button class="btn" onclick="createTemplate()">Créer le modèle</button>
+        <div id="template-error" class="form-error"></div>
+
+        <table class="sigma-table" style="margin-top:16px;">
+          <thead><tr><th>Nom</th><th>Type</th><th></th></tr></thead>
+          <tbody id="templates-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h3>Émettre une carte</h3>
+        <div class="field"><label>Rechercher un élève</label><input id="card-student-search" placeholder="nom, prénom, matricule" onkeydown="if(event.key==='Enter') searchStudentsForCard()" /></div>
+        <button class="btn ghost sm" onclick="searchStudentsForCard()" style="margin:6px 0;">Rechercher</button>
+        <div id="card-student-results"></div>
+        <div id="card-issue-form" style="display:none; margin-top:10px;">
+          <div class="field"><label>Modèle</label><select id="issue-template"></select></div>
+          <button class="btn" onclick="issueCard()">Émettre la carte</button>
+        </div>
+        <div id="issue-error" class="form-error"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="form-row" style="justify-content:space-between"><h3 style="margin:0">Cartes émises</h3><button class="btn sm" onclick="bulkIssueClassCards()">🎫 Émettre les cartes manquantes</button> <button class="btn accent sm" onclick="downloadClassCards()">⬇️ A4 — 10 badges/page</button></div>
+      <table class="sigma-table">
+        <thead><tr><th>N° carte</th><th>Titulaire</th><th>Émise le</th><th>Expire le</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="cards-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+let selectedStudentForCard = null;
+
+async function loadTemplates() {
+  const ctx = Sigma.context.get();
+  const templates = await Sigma.api(`/api/card-templates?school_id=${ctx.school_id}`);
+  document.getElementById("templates-body").innerHTML = templates.length
+    ? templates.map(t => `<tr><td>${Sigma.escapeHtml(t.name)}${t.is_default ? ' <span class="badge green">défaut</span>' : ""}</td><td>${Sigma.escapeHtml(t.card_type)}</td><td></td></tr>`).join("")
+    : `<tr><td colspan="3"><div class="empty-state">Aucun modèle. Créez-en un ci-dessus.</div></td></tr>`;
+
+  const issueSelect = document.getElementById("issue-template");
+  issueSelect.innerHTML = templates.map(t => `<option value="${Number(t.id)}">${Sigma.escapeHtml(t.name)}</option>`).join("");
+}
+
+async function createTemplate() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("template-error");
+  errorBox.textContent = "";
+  const name = document.getElementById("template-name").value;
+  if (!name) { errorBox.textContent = "Le nom est obligatoire."; return; }
+  try {
+    await Sigma.postJson("/api/card-templates", {
+      school_id: Number(ctx.school_id), name, card_type: document.getElementById("template-type").value,
+      layout: {
+        primary_color: document.getElementById("template-primary").value,
+        accent_color: document.getElementById("template-accent").value,
+        show_qr: document.getElementById("template-qr").checked,
+        show_photo: document.getElementById("template-photo").checked,
+      },
+    });
+    document.getElementById("template-name").value = "";
+    Sigma.toast("Modèle créé");
+    loadTemplates();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function searchStudentsForCard() {
+  const ctx = Sigma.context.get();
+  const search = document.getElementById("card-student-search").value;
+  if (!search) return;
+  const data = await Sigma.api(`/api/students/grid?school_id=${ctx.school_id}&search=${encodeURIComponent(search)}&limit=8`);
+  document.getElementById("card-student-results").innerHTML = data.items.length
+    ? data.items.map(s => `<div style="padding:6px 0; font-size:13px; display:flex; justify-content:space-between; align-items:center;">
+        <span>${Sigma.escapeHtml(s.last_name)} ${Sigma.escapeHtml(s.first_name)} — ${Sigma.escapeHtml(s.matricule)}</span>
+        <button class="btn ghost sm" data-choose-student="${encodeURIComponent(JSON.stringify(s))}">Choisir</button>
+      </div>`).join("")
+    : `<div class="empty-state">Aucun résultat.</div>`;
+  document.querySelectorAll("#card-student-results [data-choose-student]").forEach(btn => btn.addEventListener("click", () => {
+    try { chooseStudentForCard(JSON.parse(decodeURIComponent(btn.dataset.chooseStudent))); } catch (_) { Sigma.toast("Résultat élève invalide", "error"); }
+  }));
+}
+
+function chooseStudentForCard(student) {
+  selectedStudentForCard = student;
+  document.getElementById("card-issue-form").style.display = "block";
+  document.getElementById("card-student-results").innerHTML = `<div class="badge blue">Sélectionné: ${Sigma.escapeHtml(student.first_name)} ${Sigma.escapeHtml(student.last_name)}</div>`;
+}
+
+async function issueCard() {
+  const ctx = Sigma.context.get();
+  const errorBox = document.getElementById("issue-error");
+  errorBox.textContent = "";
+  if (!selectedStudentForCard) { errorBox.textContent = "Choisissez d'abord un élève."; return; }
+  try {
+    await Sigma.postJson("/api/id-cards", {
+      school_id: Number(ctx.school_id), template_id: Number(document.getElementById("issue-template").value),
+      holder_type: "student", student_id: selectedStudentForCard.id,
+    });
+    Sigma.toast("Carte émise");
+    document.getElementById("card-issue-form").style.display = "none";
+    document.getElementById("card-student-results").innerHTML = "";
+    selectedStudentForCard = null;
+    loadCards();
+  } catch (e) { errorBox.textContent = e.message; }
+}
+
+async function loadCards() {
+  const ctx = Sigma.context.get();
+  const cards = await Sigma.api(`/api/id-cards?school_id=${ctx.school_id}`);
+  document.getElementById("cards-body").innerHTML = cards.length
+    ? cards.map(c => `
+        <tr>
+          <td>${c.card_number}</td><td>${c.holder_name}</td>
+          <td>${c.issued_at}</td><td>${c.expires_at || "—"}</td>
+          <td>${statusBadge(c.status, c.is_active)}</td>
+          <td>
+            <button class="btn ghost sm" onclick="printCard(${c.id})">🖨️ Imprimer</button> <button class="btn ghost sm" onclick="downloadCardPdf(${c.id})">⬇️ PDF</button>
+            ${c.is_active ? `<button class="btn danger sm" onclick="revokeCard(${c.id})">Révoquer</button>` : ""}
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="6"><div class="empty-state">Aucune carte émise pour cette école.</div></td></tr>`;
+}
+
+async function downloadCardPdf(cardId){try{await Sigma.downloadBlob(`/api/id-cards/${cardId}/download.pdf`,`carte_${cardId}.pdf`)}catch(e){Sigma.toast(e.message,'error')}}
+
+async function printCard(cardId) {
+  try { await Sigma.openBlobInNewTab(`/api/id-cards/${cardId}/print`); }
+  catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+async function revokeCard(cardId) {
+  const reason = prompt("Motif de la révocation (perte, vol, autre) :");
+  if (!reason) return;
+  try {
+    await Sigma.postJson(`/api/id-cards/${cardId}/revoke`, { reason });
+    Sigma.toast("Carte révoquée");
+    loadCards();
+  } catch (e) { Sigma.toast(e.message, "error"); }
+}
+
+function statusBadge(status, active){ const labels={active:'Active',printed:'Imprimée',delivered:'Délivrée',lost:'Perdue',damaged:'Endommagée',revoked:'Révoquée',replaced:'Remplacée'}; const cls=active?'green':'red'; return `<span class="badge ${cls}">${labels[status]||status||'Active'}</span>`; }
+
+async function bulkIssueClassCards(){
+  const c=Sigma.context.get(); if(!c.class_id){Sigma.toast('Sélectionnez une classe dans la barre du haut','error');return;}
+  const tpl=document.getElementById('issue-template').value; if(!tpl){Sigma.toast('Créez d’abord un modèle de badge','error');return;}
+  try{const r=await Sigma.postJson(`/api/classes/${c.class_id}/id-cards/bulk-issue`,{school_id:Number(c.school_id),template_id:Number(tpl)}); Sigma.toast(`${r.issued} badge(s) émis`); loadCards();}catch(e){Sigma.toast(e.message,'error')}
+}
+
+async function downloadClassCards(){const c=Sigma.context.get();if(!c.class_id){Sigma.toast('Sélectionnez une classe dans la barre du haut','error');return}try{await Sigma.downloadBlob(`/api/classes/${c.class_id}/id-cards/download.pdf`,'cartes_classe.pdf')}catch(e){Sigma.toast(e.message,'error')}}
+
+async function refreshAll() { await loadTemplates(); await loadCards(); }
+
+Sigma.boot("/dashboard/cards.html", async () => {
+  await Sigma.renderContextBar("context-bar", { showClass: false, showPeriod: false }, refreshAll);
+});
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/dashboard/sw.js").catch(()=>{});}</script></body>
+</html>

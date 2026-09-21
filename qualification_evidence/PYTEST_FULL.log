@@ -1,0 +1,390 @@
+........................................................................ [ 15%]
+........................................................................ [ 30%]
+........................................................................ [ 45%]
+........................................................................ [ 61%]
+...............................................................F........ [ 76%]
+...................................F.......F............................ [ 91%]
+.......................................                                  [100%]
+==================================== ERRORS ====================================
+____________ ERROR collecting tests/test_v446_correction_actions.py ____________
+ImportError while importing test module '/mnt/data/real_qualification/workspace/tests/test_v446_correction_actions.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_v446_correction_actions.py:13: in <module>
+    from app.api.students import update_level, deactivate_level, update_class, deactivate_class
+app/api/students.py:9: in <module>
+    from app.deps import get_current_user, require_permission
+app/deps.py:6: in <module>
+    from app.core.security import decode_token
+app/core/security.py:5: in <module>
+    from jose import jwt, JWTError
+E   ModuleNotFoundError: No module named 'jose'
+=================================== FAILURES ===================================
+___ test_first_run_admin_has_known_password_and_forced_change_blocks_access ____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-12/test_first_run_admin_has_known0')
+
+    def test_first_run_admin_has_known_password_and_forced_change_blocks_access(tmp_path):
+        db_url = f"sqlite:///{(tmp_path / 'sigma_first_run.db').as_posix()}"
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+    
+        script = textwrap.dedent(f"""
+            import os, sys
+            os.environ["DATABASE_URL"] = {db_url!r}
+            os.environ["SIGMA_DATA_DIR"] = {str(data_dir)!r}
+            os.environ["SECRET_KEY"] = "test-secret-first-run-0123456789"
+            sys.path.insert(0, {str(ROOT)!r})
+    
+            from alembic.config import Config
+            from alembic import command
+            cfg = Config({str(ROOT / "alembic.ini")!r})
+            cfg.set_main_option("script_location", {str(ROOT / "alembic")!r})
+            command.upgrade(cfg, "head")
+    
+            # seed.run() ne doit jamais lever d'exception, y compris sur une
+            # console qui ne saurait pas encoder certains caracteres.
+            import seed
+            seed.run()
+    
+            from fastapi.testclient import TestClient
+            from app.main import app
+            client = TestClient(app)
+    
+            credentials = data_dir / "first-run-credentials.txt"
+            assert credentials.exists()
+            report = credentials.read_text(encoding="utf-8")
+    
+            KNOWN_PASSWORD = next(line.split(":", 1)[1].strip() for line in report.splitlines() if line.startswith("Mot de passe :"))
+    
+            r = client.post("/api/auth/login", data={{"username": "admin", "password": KNOWN_PASSWORD}})
+            assert r.status_code == 200, r.text
+            body = r.json()
+            assert body["must_change_password"] is True
+            token = body["access_token"]
+    
+            blocked = client.get("/api/schools", headers={{"Authorization": f"Bearer {{token}}"}})
+            assert blocked.status_code == 403
+            assert blocked.json()["detail"] == "PASSWORD_CHANGE_REQUIRED"
+    
+            changed = client.post(
+                "/api/auth/change-password",
+                headers={{"Authorization": f"Bearer {{token}}"}},
+                json={{"current_password": KNOWN_PASSWORD, "new_password": "UnAutreMotDePasseSolide987"}},
+            )
+            assert changed.status_code == 200, changed.text
+    
+            relogin = client.post("/api/auth/login", data={{"username": "admin", "password": "UnAutreMotDePasseSolide987"}})
+            assert relogin.status_code == 200
+            assert relogin.json()["must_change_password"] is False
+            new_token = relogin.json()["access_token"]
+    
+            unblocked = client.get("/api/schools", headers={{"Authorization": f"Bearer {{new_token}}"}})
+            assert unblocked.status_code == 200
+    
+            print("OK")
+        """)
+    
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+>       assert result.returncode == 0, f"stdout={result.stdout}\nstderr={result.stderr}"
+E       AssertionError: stdout=
+E         stderr=INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+E         INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+E         INFO  [alembic.runtime.migration] Running upgrade  -> 20260913_1600, SIGMA initial schema baseline. Creates the pre-V1.7 core schema.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_1600 -> 20260913_1700, SIGMA 1.7 — sync devices, operation journal and entity versions.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_1700 -> 20260913_2000, SIGMA 2.0 — identités client/serveur pour créations offline.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2000 -> 20260913_2100, SIGMA 2.1 — synchronisation des inscriptions hors ligne.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2100 -> 20260913_2200, sync v2.2 delivery acknowledgements
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2200 -> 20260913_2300, sync v2.3 academic grade protocol
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2300 -> 20260913_2400, v2.4: synchronisation contrôlée des transitions d'état des notes.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2400 -> 20260913_2500, v2.5: fiabilisation de la reprise des lots de synchronisation.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2500 -> 20260913_2600, v2.6: traçabilité et résolution explicite des conflits de synchronisation.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260913_2600 -> 20260914_3000, SIGMA V3 Foundation: notifications, push subscriptions, communication preferences.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3000 -> 20260914_3100, SIGMA Connect 3.1.0: campaigns, templates and delivery tracking.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3100 -> 20260914_3300, SIGMA V3 finance foundation
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3300 -> 20260914_3400, SIGMA V3 documents and bulk export jobs
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3400 -> 20260914_3500, SIGMA BADGE 3.5 lifecycle fields
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3500 -> 20260914_3700, SIGMA V3 Cloud/Offline/Sync health state
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3700 -> 20260914_3800, SIGMA V3.8 Cloud commercial, licence et audit chain
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_3800 -> 20260914_4000, SIGMA V4 Cloud control plane, plans and usage snapshots.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4000 -> 20260914_4100, SIGMA V4.1 billing and legal acceptance layer.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4100 -> 20260914_4200, billing automation and subscription grace controls
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4200 -> 20260914_4300, SIGMA Intelligence foundation
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4300 -> 20260914_4400, SIGMA AI Action Center
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4400 -> 20260914_4500, SIGMA AI execution engine
+E         INFO  [alembic.runtime.migration] Running upgrade 20260914_4500 -> 20260915_4600, SIGMA V4.12 — base documentaire RAG institutionnelle.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_4600 -> 20260915_4700, SIGMA V4.13 — provenance et activation des versions documentaires.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_4700 -> 20260915_4800, SIGMA V4.14 — gouvernance documentaire et retrieval hybride.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_4800 -> 20260915_4900, SIGMA V4.18 — onboarding établissement.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_4900 -> 20260915_5000, SIGMA V4.19 — Control Center operations and incidents.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_5000 -> 20260915_5100, SIGMA V4.22 — Signed payment gateway webhook inbox.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_5100 -> 20260915_5200, SIGMA V4.25 — Token revocation versioning.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_5200 -> 20260915_5300, SIGMA V4.40 — fleet inventory and safe rollout state.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260915_5300 -> 20260916_5400, SIGMA V4.46 — password recovery and forced password change.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260916_5400 -> 20260916_5500, SIGMA V4.46 — configurable student matricule sequence.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260916_5500 -> 20260916_5600, SIGMA V4.46 — atomic badge numbering.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260916_5600 -> 20260916_5700, Bind offline sync devices to the registering user.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260916_5700 -> 20260918_5800, SIGMA V4.47 — canal de communication par défaut de l'établissement.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260918_5800 -> 20260919_5900, SIGMA V4.48 — destinations cloud de sauvegarde (Google Drive, OneDrive, Dropbox).
+E         INFO  [alembic.runtime.migration] Running upgrade 20260919_5900 -> 20260920_6000, SIGMA V4.46 hardening: indexes for high-volume school workflows.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6000 -> 20260920_6100, SIGMA V4.46.0 H2 — exact monetary values and payment idempotency.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6100 -> 20260920_6200, SIGMA V4.46.0 H3 — configurable letter grades and GPA points.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6200 -> 20260920_6300, SIGMA P2 — authoritative RBAC catalog and read/import/export permissions.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6300 -> 20260920_6310, Harden honor board history with uniqueness and lookup indexes.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6310 -> 20260920_6320, Use NUMERIC for academic/evaluation scores, coefficients and percentages.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6320 -> 20260920_6330, Configurable GPA calculation mode; preserves historical overall-scale behavior.
+E         INFO  [alembic.runtime.migration] Running upgrade 20260920_6330 -> 20260920_6340, Persist honor-board scope and validation audit snapshot.
+E         Traceback (most recent call last):
+E           File "<string>", line 16, in <module>
+E             import seed
+E           File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+E             from app.core.security import hash_password
+E           File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+E             from jose import jwt, JWTError
+E         ModuleNotFoundError: No module named 'jose'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport os, sys\nos.environ["DATABASE_URL"] = \'sqlite:////tm...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+
+tests/test_v457d_first_run_admin_password.py:98: AssertionError
+________________ test_bootstrapped_director_can_create_students ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-12/test_bootstrapped_director_can0')
+
+    def test_bootstrapped_director_can_create_students(tmp_path):
+        # Exécuté dans un sous-processus dédié : recharger app.models en plein
+        # milieu de la suite de tests pollue le registre déclaratif partagé de
+        # SQLAlchemy (deux classes User distinctes coexistent alors), ce qui
+        # casse des tests plus tard dans la même suite avec une erreur de join
+        # sans rapport ("Don't know how to join to..."). Un sous-processus
+        # isolé évite totalement ce risque.
+        import subprocess
+        import sys
+        import textwrap
+    
+        env_file = tmp_path / ".env"
+        env_file.write_text(
+            "ENV=production\nSECRET_KEY=test-secret\n"
+            "SIGMA_INITIAL_ADMIN_PASSWORD=TestPassword123456!\n",
+            encoding="utf-8",
+        )
+        script = textwrap.dedent(
+            """
+            import seed
+            seed.run()
+            from app.core.database import SessionLocal
+            from app.services.rbac_enterprise import bootstrap_first_administrator
+            from app.services.authorization import user_has_permission
+            from app.models.security import User
+    
+            db = SessionLocal()
+            director = User(
+                school_id=1, username="directeur_test", email=None,
+                hashed_password="x", first_name="Jean", last_name="Directeur",
+                is_superadmin=False, must_change_password=True,
+            )
+            db.add(director)
+            db.commit()
+            db.refresh(director)
+    
+            post = bootstrap_first_administrator(db, 1, director, profile_code="direction")
+            assert post is not None
+            for perm in ("students.create", "students.modify", "students.archive", "students.transfer"):
+                assert user_has_permission(db, director, perm), perm
+            print("OK")
+            """
+        )
+        env = {**__import__("os").environ, "SIGMA_DATA_DIR": str(tmp_path)}
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(ROOT),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 2, in <module>
+E             import seed
+E           File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+E             from app.core.security import hash_password
+E           File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+E             from jose import jwt, JWTError
+E         ModuleNotFoundError: No module named 'jose'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom app.core.database import Sessi...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+
+tests/test_v467_direction_profile_student_rights.py:83: AssertionError
+_________________ test_sync_isolates_failures_and_never_raises _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-12/test_sync_isolates_failures_an0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff2b9da69f0>
+
+    def test_sync_isolates_failures_and_never_raises(tmp_path, monkeypatch):
+        """Le point le plus important : une destination cassée (jeton expiré,
+        fournisseur injoignable) ne doit jamais transformer une sauvegarde
+        locale déjà réussie en échec pour l'utilisateur."""
+        import subprocess
+        import sys
+        import textwrap
+        from pathlib import Path
+    
+        ROOT = Path(__file__).resolve().parents[1]
+        env_file = tmp_path / ".env"
+        env_file.write_text(
+            "ENV=production\nSECRET_KEY=test-secret-key-for-cloud-backup\n",
+            encoding="utf-8",
+        )
+        archive = tmp_path / "fake_backup.zip"
+        archive.write_bytes(b"contenu factice de sauvegarde")
+    
+        script = textwrap.dedent(
+            f"""
+            import seed
+            seed.run()
+            from pathlib import Path
+            from app.core.database import SessionLocal
+            from app.models.backup_cloud import CloudBackupDestination
+            from app.services.crypto import encrypt_secret
+            from app.services.cloud_backup_providers import sync_backup_to_cloud_destinations
+    
+            db = SessionLocal()
+            # Un jeton pointant vers un fournisseur inconnu garantit un échec
+            # déterministe, sans jamais tenter d'appel réseau réel.
+            dest = CloudBackupDestination(
+                school_id=1, provider="dropbox", label="Test",
+                encrypted_access_token=encrypt_secret("jeton-invalide-sans-reseau"),
+                folder_path="/SIGMA", is_active=True,
+            )
+            db.add(dest)
+            db.commit()
+    
+            results = sync_backup_to_cloud_destinations(db, Path({str(archive)!r}))
+            assert len(results) == 1
+            # On n'exige pas un statut précis (dépend du réseau du sandbox de
+            # build), seulement que la fonction n'ait jamais levé d'exception.
+            assert results[0]["provider"] == "dropbox"
+            print("OK", results[0]["status"])
+            """
+        )
+        env = {**__import__("os").environ, "SIGMA_DATA_DIR": str(tmp_path)}
+        result = subprocess.run(
+            [sys.executable, "-c", script], cwd=str(ROOT), env=env,
+            capture_output=True, text=True, timeout=60,
+        )
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 2, in <module>
+E             import seed
+E           File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+E             from app.core.security import hash_password
+E           File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+E             from jose import jwt, JWTError
+E         ModuleNotFoundError: No module named 'jose'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom pathlib import Path\nfrom app....ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+
+tests/test_v468_cloud_backup_providers.py:144: AssertionError
+=============================== warnings summary ===============================
+../../../../opt/pyvenv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:325
+../../../../opt/pyvenv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:325
+../../../../opt/pyvenv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:325
+  /opt/pyvenv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:325: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.13/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_v457d_first_run_admin_password.py::test_first_run_admin_has_known_password_and_forced_change_blocks_access - AssertionError: stdout=
+  stderr=INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+  INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+  INFO  [alembic.runtime.migration] Running upgrade  -> 20260913_1600, SIGMA initial schema baseline. Creates the pre-V1.7 core schema.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_1600 -> 20260913_1700, SIGMA 1.7 — sync devices, operation journal and entity versions.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_1700 -> 20260913_2000, SIGMA 2.0 — identités client/serveur pour créations offline.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2000 -> 20260913_2100, SIGMA 2.1 — synchronisation des inscriptions hors ligne.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2100 -> 20260913_2200, sync v2.2 delivery acknowledgements
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2200 -> 20260913_2300, sync v2.3 academic grade protocol
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2300 -> 20260913_2400, v2.4: synchronisation contrôlée des transitions d'état des notes.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2400 -> 20260913_2500, v2.5: fiabilisation de la reprise des lots de synchronisation.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2500 -> 20260913_2600, v2.6: traçabilité et résolution explicite des conflits de synchronisation.
+  INFO  [alembic.runtime.migration] Running upgrade 20260913_2600 -> 20260914_3000, SIGMA V3 Foundation: notifications, push subscriptions, communication preferences.
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3000 -> 20260914_3100, SIGMA Connect 3.1.0: campaigns, templates and delivery tracking.
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3100 -> 20260914_3300, SIGMA V3 finance foundation
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3300 -> 20260914_3400, SIGMA V3 documents and bulk export jobs
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3400 -> 20260914_3500, SIGMA BADGE 3.5 lifecycle fields
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3500 -> 20260914_3700, SIGMA V3 Cloud/Offline/Sync health state
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3700 -> 20260914_3800, SIGMA V3.8 Cloud commercial, licence et audit chain
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_3800 -> 20260914_4000, SIGMA V4 Cloud control plane, plans and usage snapshots.
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4000 -> 20260914_4100, SIGMA V4.1 billing and legal acceptance layer.
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4100 -> 20260914_4200, billing automation and subscription grace controls
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4200 -> 20260914_4300, SIGMA Intelligence foundation
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4300 -> 20260914_4400, SIGMA AI Action Center
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4400 -> 20260914_4500, SIGMA AI execution engine
+  INFO  [alembic.runtime.migration] Running upgrade 20260914_4500 -> 20260915_4600, SIGMA V4.12 — base documentaire RAG institutionnelle.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_4600 -> 20260915_4700, SIGMA V4.13 — provenance et activation des versions documentaires.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_4700 -> 20260915_4800, SIGMA V4.14 — gouvernance documentaire et retrieval hybride.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_4800 -> 20260915_4900, SIGMA V4.18 — onboarding établissement.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_4900 -> 20260915_5000, SIGMA V4.19 — Control Center operations and incidents.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_5000 -> 20260915_5100, SIGMA V4.22 — Signed payment gateway webhook inbox.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_5100 -> 20260915_5200, SIGMA V4.25 — Token revocation versioning.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_5200 -> 20260915_5300, SIGMA V4.40 — fleet inventory and safe rollout state.
+  INFO  [alembic.runtime.migration] Running upgrade 20260915_5300 -> 20260916_5400, SIGMA V4.46 — password recovery and forced password change.
+  INFO  [alembic.runtime.migration] Running upgrade 20260916_5400 -> 20260916_5500, SIGMA V4.46 — configurable student matricule sequence.
+  INFO  [alembic.runtime.migration] Running upgrade 20260916_5500 -> 20260916_5600, SIGMA V4.46 — atomic badge numbering.
+  INFO  [alembic.runtime.migration] Running upgrade 20260916_5600 -> 20260916_5700, Bind offline sync devices to the registering user.
+  INFO  [alembic.runtime.migration] Running upgrade 20260916_5700 -> 20260918_5800, SIGMA V4.47 — canal de communication par défaut de l'établissement.
+  INFO  [alembic.runtime.migration] Running upgrade 20260918_5800 -> 20260919_5900, SIGMA V4.48 — destinations cloud de sauvegarde (Google Drive, OneDrive, Dropbox).
+  INFO  [alembic.runtime.migration] Running upgrade 20260919_5900 -> 20260920_6000, SIGMA V4.46 hardening: indexes for high-volume school workflows.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6000 -> 20260920_6100, SIGMA V4.46.0 H2 — exact monetary values and payment idempotency.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6100 -> 20260920_6200, SIGMA V4.46.0 H3 — configurable letter grades and GPA points.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6200 -> 20260920_6300, SIGMA P2 — authoritative RBAC catalog and read/import/export permissions.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6300 -> 20260920_6310, Harden honor board history with uniqueness and lookup indexes.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6310 -> 20260920_6320, Use NUMERIC for academic/evaluation scores, coefficients and percentages.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6320 -> 20260920_6330, Configurable GPA calculation mode; preserves historical overall-scale behavior.
+  INFO  [alembic.runtime.migration] Running upgrade 20260920_6330 -> 20260920_6340, Persist honor-board scope and validation audit snapshot.
+  Traceback (most recent call last):
+    File "<string>", line 16, in <module>
+      import seed
+    File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+      from app.core.security import hash_password
+    File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+      from jose import jwt, JWTError
+  ModuleNotFoundError: No module named 'jose'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport os, sys\nos.environ["DATABASE_URL"] = \'sqlite:////tm...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+FAILED tests/test_v467_direction_profile_student_rights.py::test_bootstrapped_director_can_create_students - AssertionError: Traceback (most recent call last):
+    File "<string>", line 2, in <module>
+      import seed
+    File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+      from app.core.security import hash_password
+    File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+      from jose import jwt, JWTError
+  ModuleNotFoundError: No module named 'jose'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom app.core.database import Sessi...ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+FAILED tests/test_v468_cloud_backup_providers.py::test_sync_isolates_failures_and_never_raises - AssertionError: Traceback (most recent call last):
+    File "<string>", line 2, in <module>
+      import seed
+    File "/mnt/data/real_qualification/workspace/seed.py", line 31, in <module>
+      from app.core.security import hash_password
+    File "/mnt/data/real_qualification/workspace/app/core/security.py", line 5, in <module>
+      from jose import jwt, JWTError
+  ModuleNotFoundError: No module named 'jose'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/opt/pyvenv/bin/python', '-c', '\nimport seed\nseed.run()\nfrom pathlib import Path\nfrom app....ecurity.py", line 5, in <module>\n    from jose import jwt, JWTError\nModuleNotFoundError: No module named \'jose\'\n').returncode
+ERROR tests/test_v446_correction_actions.py
+3 failed, 468 passed, 3 warnings, 1 error in 14.43s

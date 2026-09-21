@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIGMA — Tableau de bord</title>
+<link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css" />
+
+</head>
+<body>
+
+<div id="sigma-header"></div>
+<div id="login-screen"></div>
+
+<main id="main-screen" style="display:none;">
+  <div class="sigma-main">
+    <h2 class="page-title">Tableau de bord</h2>
+    <p class="page-subtitle">Vue d'ensemble dynamique de l'établissement — auto-actualisée toutes les 30 secondes</p>
+
+    <div id="context-bar"></div><div style="margin:12px 0"><button class="btn accent" onclick="downloadStats()">⬇️ Télécharger les statistiques PDF</button></div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="panel action-panel" style="margin-bottom:20px;">
+      <div class="panel-heading"><div><h3>À traiter maintenant</h3><p class="panel-hint">Les priorités de direction, avec accès direct à l'action.</p></div><span id="action-total" class="action-total">0</span></div>
+      <div id="action-items" class="action-items"></div>
+    </div>
+
+    <div class="panels-grid">
+      <div class="panel">
+        <h3>Effectif par niveau</h3>
+        <div id="effectif-chart"></div>
+      </div>
+      <div class="panel">
+        <h3>Alertes intelligentes</h3>
+        <div id="alerts-list"></div>
+      </div>
+    </div>
+
+    <div class="panels-grid" style="margin-top:20px;">
+      <div class="panel">
+        <h3>Évolution de la moyenne (classe sélectionnée)</h3>
+        <div id="evolution-chart"></div>
+      </div>
+      <div class="panel">
+        <h3>Actions rapides</h3><p>Accès rapide aux modules opérationnels.</p><button class="btn" onclick="location.href='/dashboard/students.html'">Gérer les élèves</button> <button class="btn ghost" onclick="location.href='/dashboard/cards.html'">Gérer les cartes</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+
+<script src="/dashboard/assets/sigma-offline.js"></script><script src="/dashboard/assets/sigma.js"></script>
+<script>
+function safeInternalHref(value){try{const u=new URL(String(value||''),location.origin);return u.origin===location.origin&&u.pathname.startsWith('/dashboard/')?u.pathname+u.search+u.hash:'/dashboard/';}catch(_){return '/dashboard/';}}
+function esc(v){const d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;}
+async function refreshAll(){const c=Sigma.context.get();if(!c.school_id)return;try{const base=`school_id=${c.school_id}&academic_year_id=${c.academic_year_id||''}&academic_period_id=${c.academic_period_id||''}`;const [summary,actions,a,e]=await Promise.all([Sigma.api(`/api/dashboard/summary?${base}`),Sigma.api(`/api/dashboard/action-items?${base}`),Sigma.api(`/api/dashboard/alerts?${base}`),Sigma.api(`/api/reports/effectif?school_id=${c.school_id}&academic_year_id=${c.academic_year_id}`)]);document.getElementById('kpi-grid').innerHTML=[kpi('Élèves actifs',summary.effectif_eleves),kpi('Personnel',summary.effectif_personnel),kpi('Classes',summary.nombre_classes),kpi('Moyenne générale',summary.moyenne_generale_ecole??'—'),kpi('Taux de réussite',summary.taux_reussite!=null?summary.taux_reussite+' %':'—'),kpi('Absentéisme',summary.taux_absenteisme!=null?summary.taux_absenteisme+' %':'—',true)].join('');renderActions(actions);document.getElementById('alerts-list').innerHTML=a.alerts.length?a.alerts.map(x=>`<div class="alert-item ${['info','warning','danger','critical','success'].includes(x.level)?x.level:'info'}">${esc(x.message)}</div>`).join(''):'<div class="no-alert">Aucune alerte pour le moment.</div>';renderEffectif(e.par_niveau);const evo=c.class_id?await Sigma.api(`/api/dashboard/evolution?class_id=${c.class_id}`):[];renderEvolution(evo)}catch(err){Sigma.toast('Erreur de chargement : '+err.message,'error')}}
+function renderActions(data){const box=document.getElementById('action-items');document.getElementById('action-total').textContent=data.total||0;if(!data.items.length){box.innerHTML='<div class="empty-state action-empty">✓ Rien d’urgent à traiter pour le moment.</div>';return}box.innerHTML=data.items.map(x=>`<div class="action-item ${esc(x.level)}"><div class="action-count">${esc(x.count)}</div><div class="action-body"><strong>${esc(x.title)}</strong><span>${esc(x.message)}</span></div><a class="btn action-btn" href="${safeInternalHref(x.action_href)}">${esc(x.action_label)} →</a></div>`).join('')}
+function kpi(label,value,accent){return `<div class="kpi ${accent?'accent':''}" onclick="document.getElementById('effectif-chart').scrollIntoView({behavior:'smooth'})"><div class="value">${value}</div><div class="label">${label}</div></div>`}
+function renderEffectif(rows){const el=document.getElementById('effectif-chart');if(!rows.length){el.innerHTML='<div class="empty-state">Aucune donnée.</div>';return}Sigma.renderDonut('effectif-chart',rows.map(r=>({label:r.level_name,value:r.effectif})),'Élèves')}
+function renderEvolution(rows){const el=document.getElementById('evolution-chart');if(!rows.length){el.innerHTML='<div class="empty-state">Sélectionnez une classe pour voir son évolution.</div>';return}el.innerHTML=rows.map(r=>`<div style="display:inline-flex;flex-direction:column;justify-content:flex-end;vertical-align:bottom;width:70px;height:190px;margin-right:8px;text-align:center"><div style="height:${Math.max(4,Math.min(100,(r.moyenne_classe||0)*5))}%;background:var(--accent);border-radius:5px 5px 0 0" title="${r.moyenne_classe||'—'} /20"></div><small>P${Sigma.escapeHtml(r.academic_period_id)}</small></div>`).join('')}
+async function downloadStats(){const c=Sigma.context.get();await Sigma.downloadBlob(`/api/dashboard/stats.pdf?school_id=${c.school_id}&academic_year_id=${c.academic_year_id}`,'statistiques_sigma.pdf')}
+Sigma.boot('/dashboard/',async()=>{await Sigma.renderContextBar('context-bar',{showClass:true,showPeriod:true},refreshAll);setInterval(refreshAll,30000)});
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/dashboard/sw.js").catch(()=>{});}</script></body>
+</html>

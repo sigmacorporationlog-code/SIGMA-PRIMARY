@@ -1,0 +1,35 @@
+name: SIGMA Deploy
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+      tag:
+        description: Existing release tag, e.g. v4.34.0
+        required: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+      - name: Download release artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern 'SIGMA-Server.exe' --dir release
+      - name: Verify artifact hash
+        run: sha256sum release/SIGMA-Server.exe
+      - name: Deploy over SSH
+        env:
+          SIGMA_DEPLOY_HOST: ${{ secrets.SIGMA_DEPLOY_HOST }}
+          SIGMA_DEPLOY_USER: ${{ secrets.SIGMA_DEPLOY_USER }}
+          SIGMA_DEPLOY_PATH: ${{ secrets.SIGMA_DEPLOY_PATH }}
+        run: |
+          test -n "$SIGMA_DEPLOY_HOST" -a -n "$SIGMA_DEPLOY_USER" -a -n "$SIGMA_DEPLOY_PATH"
+          scp release/SIGMA-Server.exe "$SIGMA_DEPLOY_USER@$SIGMA_DEPLOY_HOST:$SIGMA_DEPLOY_PATH/"
+          ssh "$SIGMA_DEPLOY_USER@$SIGMA_DEPLOY_HOST" "sha256sum '$SIGMA_DEPLOY_PATH/SIGMA-Server.exe'"

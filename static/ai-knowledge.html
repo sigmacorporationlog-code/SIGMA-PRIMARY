@@ -1,0 +1,105 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA Intelligence — Base documentaire</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard/assets/favicon-32.png">
+<link rel="stylesheet" href="/dashboard/assets/sigma.css"><style>body{padding:24px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 3px 12px #0000000a}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin:6px 0 12px}textarea{min-height:240px}.result{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:10px 0}.muted{color:#64748b}.notice{padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:12px}@media(max-width:850px){.layout{grid-template-columns:1fr}}</style></head><body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="display:none"><div class="sigma-main"><div class="head"><div><h1>📚 SIGMA AI — Base documentaire</h1><div class="muted">Règlements, procédures, référentiels et documents internes de l’établissement.</div></div><button onclick="location.href='/dashboard/ai-control.html'">Centre IA</button></div><div class="notice">🔐 Les documents sont cloisonnés par établissement. Par défaut, leur contenu n’est pas transmis à un fournisseur IA externe.</div><div class="layout"><section class="card"><h2>Indexer un document</h2><label>Titre</label><input id="title" placeholder="Règlement intérieur 2026"><label>Type</label><select id="type"><option value="internal">Document interne</option><option value="regulation">Règlement</option><option value="procedure">Procédure</option><option value="pedagogy">Référentiel pédagogique</option><option value="calendar">Calendrier</option></select><label>Version</label><input id="version" placeholder="2026"><label>Source</label><input id="source" placeholder="PDF signé / note de service / document interne"><label>Dossier</label><input id="folder" value="General" placeholder="Règlements"><label>Tags</label><input id="tags" placeholder="absence, règlement, 2026"><label>Fichier (TXT, MD, PDF ou DOCX)</label><input id="file" type="file" accept=".txt,.md,.pdf,.docx"><div class="muted">Le fichier est extrait en mémoire puis indexé ; le binaire original n’est pas conservé par le moteur RAG.</div><label>Ou contenu texte</label><textarea id="content" placeholder="Collez ici le texte du document…"></textarea><button onclick="ingest()">Indexer</button><span id="msg" class="muted"></span></section><section class="card"><h2>Recherche documentaire</h2><input id="query" placeholder="Quelle est la procédure en cas d'absence injustifiée ?"><button onclick="searchDocs()">Rechercher</button><div id="results" style="margin-top:14px"></div><hr><h3>Documents indexés</h3><div id="docs" class="muted">Chargement…</div></section></div><script src="/dashboard/assets/sigma.js"></script><script>
+const esc = (s) => String(s ?? '').replace(/[&<>"\']/g, (m) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[m]));
+
+async function api(url, options = {}) {
+  const data = await Sigma.api(url, options);
+  return data;
+}
+
+async function ingest() {
+  const msg = document.getElementById('msg');
+  msg.textContent = '';
+  try {
+    const f = document.getElementById('file').files[0];
+    let data;
+    if (f) {
+      const fd = new FormData();
+      const titleEl = document.getElementById('title');
+      const typeEl = document.getElementById('type');
+      const versionEl = document.getElementById('version');
+      const folderEl = document.getElementById('folder');
+      const tagsEl = document.getElementById('tags');
+      if (titleEl.value) fd.append('title', titleEl.value);
+      fd.append('document_type', typeEl.value);
+      if (versionEl.value) fd.append('version', versionEl.value);
+      fd.append('file', f);
+      fd.append('folder', folderEl.value || 'General');
+      fd.append('tags', tagsEl.value || '');
+      data = await api('/api/ai/knowledge/documents/upload', { method: 'POST', body: fd });
+    } else {
+      data = await api('/api/ai/knowledge/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.value,
+          document_type: type.value,
+          version: version.value || null,
+          source_name: source.value || null,
+          content: content.value,
+          metadata: {},
+          folder: folder.value || 'General',
+          tags: (tags.value || '').split(',').map((x) => x.trim()).filter(Boolean)
+        })
+      });
+    }
+    msg.textContent = ` ✓ Indexé (${Number(data.chunk_count || 0)} fragment(s)).`;
+    content.value = '';
+    document.getElementById('file').value = '';
+    await loadDocs();
+  } catch (e) {
+    msg.textContent = ' ✕ ' + e.message;
+  }
+}
+
+async function searchDocs() {
+  try {
+    const data = await api('/api/ai/knowledge/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query.value, limit: 8 })
+    });
+    results.innerHTML = data.results.length
+      ? data.results.map((x, i) => `<article class="result"><strong>[${i + 1}] ${esc(x.citation)}</strong><div class="muted">Score : ${esc(x.score)}</div><p>${esc(x.content)}</p></article>`).join('')
+      : '<div class="muted">Aucun passage pertinent.</div>';
+  } catch (e) {
+    results.textContent = '✕ ' + e.message;
+  }
+}
+
+async function loadDocs() {
+  try {
+    const data = await api('/api/ai/knowledge/documents');
+    docs.innerHTML = data.length
+      ? data.map((x) => `<div style="margin:8px 0"><strong>${esc(x.title)}</strong> — v${esc(x.version || '—')} · ${Number(x.chunk_count || 0)} fragment(s) · ${esc(x.status || 'published')} · ${x.is_active ? 'actif' : 'inactif'} <button data-doc-id="${Number(x.id)}" data-active="${x.is_active ? '0' : '1'}">${x.is_active ? 'Désactiver' : 'Activer'}</button> <button data-doc-id="${Number(x.id)}" data-status="review">Revue</button> <button data-doc-id="${Number(x.id)}" data-status="published">Publier</button></div>`).join('')
+      : 'Aucun document indexé.';
+    docs.querySelectorAll('[data-active]').forEach((btn) => btn.addEventListener('click', () => toggleDoc(Number(btn.dataset.docId), btn.dataset.active === '1')));
+    docs.querySelectorAll('[data-status]').forEach((btn) => btn.addEventListener('click', () => setStatus(Number(btn.dataset.docId), btn.dataset.status)));
+  } catch (e) {
+    docs.textContent = 'Impossible de charger : ' + e.message;
+  }
+}
+
+async function toggleDoc(id, active) {
+  try {
+    await api('/api/ai/knowledge/documents/' + Number(id) + '/state', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active })
+    });
+    await loadDocs();
+  } catch (e) { alert(e.message); }
+}
+
+async function setStatus(id, status) {
+  try {
+    await api('/api/ai/knowledge/documents/' + Number(id) + '/governance', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
+    });
+    await loadDocs();
+  } catch (e) { alert(e.message); }
+}
+
+Sigma.boot('/dashboard/ai-knowledge.html', loadDocs);
+</script></div></main></body></html>

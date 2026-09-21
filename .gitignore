@@ -1,0 +1,27 @@
+# Local secrets / environment
+.env
+.env.*
+!.env.example
+
+# Python caches / test caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Virtual environments
+venv/
+.venv/
+
+# Frontend/package build output
+node_modules/
+build/
+dist/
+
+# Qualification restore artifacts containing SQLite databases
+restore_staging/*.zip

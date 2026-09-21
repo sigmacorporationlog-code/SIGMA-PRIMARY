@@ -1,0 +1,12 @@
+{
+  "product": "SIGMA",
+  "release": "4.46.0",
+  "channel": "commercial",
+  "title": "SIGMA V4.46 — Production Hardening H2-H3, Finance, Academic Grading & Document Verification",
+  "minimum_previous_release": "4.45.0",
+  "package_type": "server+android",
+  "integrity": "sha256+ed25519",
+  "migration_required": true,
+  "notes": "Durcissement sécurité, récupération de compte, matricules, recadrage photo, précision monétaire Decimal/NUMERIC, idempotence paiements, index haute charge, notes finales validées, A/B/C/D/F + grade points/GPA configurables, file offline ACK et QR de vérification signés.",
+  "ai_action_execution_default": false
+}

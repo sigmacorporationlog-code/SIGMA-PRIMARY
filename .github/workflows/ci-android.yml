@@ -1,0 +1,132 @@
+name: SIGMA CI - Android
+
+# Ce pipeline compile et publie UNIQUEMENT l'application Android (wrapper
+# WebView mobile/android). Il ne dépend jamais du serveur Windows ni de ses
+# tests Python : si ceux-ci échouent, ce pipeline continue et publie quand
+# même l'APK/AAB Android. Voir ci-windows.yml pour la partie serveur.
+#
+# Sur les pull requests, ce pipeline ne se déclenche que si mobile/ (ou ce
+# fichier lui-même) a changé — inutile de compiler l'app Android pour une
+# modification qui ne touche que le serveur. Sur push vers une branche ou
+# un tag de version, aucun filtre de chemin n'est appliqué (une release doit
+# toujours produire ses artefacts Android).
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/ci-android.yml']
+  workflow_dispatch:
+
+env:
+  SIGMA_ANDROID_BASE_URL: ${{ vars.SIGMA_ANDROID_BASE_URL || 'https://sigma.invalid/' }}
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          # 'tools' (le paquet legacy installé par défaut par cette action)
+          # n'existe plus dans le dépôt Android depuis plusieurs années :
+          # sdkmanager échoue systématiquement avec 'Failed to find package
+          # tools' et fait planter tout le job. On désactive l'installation
+          # par défaut ; l'étape suivante installe explicitement ce dont on
+          # a réellement besoin (platforms;android-35, build-tools;35.0.0).
+          packages: ''
+      - name: Install Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build installable debug APK and Play App Bundle
+        working-directory: mobile/android
+        run: gradle --no-daemon :app:assembleDebug :app:bundleRelease -PSIGMA_BASE_URL="$SIGMA_ANDROID_BASE_URL" -PSIGMA_APP_CHANNEL="commercial"
+      - name: Stage Android artifacts
+        run: |
+          mkdir -p release_out
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk release_out/SIGMA-Android-debug.apk
+          cp mobile/android/app/build/outputs/bundle/release/app-release.aab release_out/SIGMA-Android-release.aab
+          sha256sum release_out/SIGMA-Android-debug.apk release_out/SIGMA-Android-release.aab > release_out/SIGMA-Android.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigma-android-artifacts
+          path: |
+            release_out/SIGMA-Android-debug.apk
+            release_out/SIGMA-Android-release.aab
+            release_out/SIGMA-Android.sha256
+          if-no-files-found: error
+
+  android-signed-release:
+    if: startsWith(github.ref, 'refs/tags/v') && vars.SIGMA_ANDROID_SIGNING_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGMA_ANDROID_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/sigma-release.jks"
+      - name: Build signed release APK and AAB
+        working-directory: mobile/android
+        env:
+          SIGMA_ANDROID_KEYSTORE: ${{ runner.temp }}/sigma-release.jks
+          SIGMA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.SIGMA_ANDROID_KEYSTORE_PASSWORD }}
+          SIGMA_ANDROID_KEY_ALIAS: ${{ secrets.SIGMA_ANDROID_KEY_ALIAS }}
+          SIGMA_ANDROID_KEY_PASSWORD: ${{ secrets.SIGMA_ANDROID_KEY_PASSWORD }}
+        run: gradle --no-daemon :app:assembleRelease :app:bundleRelease -PSIGMA_BASE_URL="$SIGMA_ANDROID_BASE_URL" -PSIGMA_APP_CHANNEL="commercial"
+      - name: Stage signed APK
+        run: |
+          mkdir -p release_out
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk release_out/SIGMA-Android.apk
+          cp mobile/android/app/build/outputs/bundle/release/app-release.aab release_out/SIGMA-Android.aab
+          sha256sum release_out/SIGMA-Android.apk release_out/SIGMA-Android.aab > release_out/SIGMA-Android-release.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigma-android-signed-apk
+          path: |
+            release_out/SIGMA-Android.apk
+            release_out/SIGMA-Android.aab
+            release_out/SIGMA-Android-release.sha256
+          if-no-files-found: error
+
+  release-android:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: android-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: sigma-android-artifacts, path: release_out}
+      - uses: softprops/action-gh-release@v2
+        with:
+          # tag_name explicite : si la release existe déjà (par ex. créée
+          # entretemps par ci-windows.yml sur le même tag), ces fichiers
+          # Android s'y ajoutent au lieu d'écraser ou d'entrer en conflit.
+          # Pas de generate_release_notes ici : ci-windows.yml s'en charge
+          # déjà pour cette même release — les générer deux fois créerait
+          # une note dupliquée/incohérente selon l'ordre d'exécution des
+          # deux pipelines (non garanti puisqu'indépendants).
+          tag_name: ${{ github.ref_name }}
+          files: |
+            release_out/SIGMA-Android-debug.apk
+            release_out/SIGMA-Android-release.aab
+            release_out/SIGMA-Android.sha256

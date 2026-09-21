@@ -1,0 +1,264 @@
+# I18N_INVENTORY.md
+
+- FR keys: **75**
+- EN keys: **75**
+- Key parity: **True**
+- Historical candidate literal count from baseline audit: **919**.
+- Current status: **PARTIAL MIGRATION**; hardcoded UI literals still exist and must be migrated incrementally.
+
+## Current hardcoded candidate sample
+- `static/operations.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Control Center</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/operations.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"><style>.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding
+- `static/operations.html:4` — async function load(){try{const d=await Sigma.api('/api/operations/control-center');document.getElementById('cards').innerHTML=[['Établissements',d.schools.total],['Abonnements actifs',d.schools.active_subscriptions],['I
+- `static/finance.html:6` — <title>SIGMA — Finance</title>
+- `static/finance.html:18` — <h2 class="page-title">Finance</h2>
+- `static/finance.html:19` — <p class="page-subtitle">Grilles de frais, factures, paiements et reçus</p>
+- `static/finance.html:24` — <button class="tab-btn active" data-tab="fees">Grille de frais</button>
+- `static/finance.html:25` — <button class="tab-btn" data-tab="student">Dossier élève</button>
+- `static/finance.html:31` — <h3>Nouveau frais</h3>
+- `static/finance.html:33` — <div class="field"><label>Type</label>
+- `static/finance.html:35` — <option value="registration">Inscription</option><option value="tuition">Scolarité</option>
+- `static/finance.html:36` — <option value="canteen">Cantine</option><option value="transport">Transport</option>
+- `static/finance.html:37` — <option value="uniform">Uniforme</option><option value="exam">Examens</option>
+- `static/finance.html:38` — <option value="activity">Activités</option><option value="other">Autre</option>
+- `static/finance.html:41` — <div class="field"><label>Libellé</label><input id="fee-label" placeholder="ex: Scolarité T1" /></div>
+- `static/finance.html:42` — <div class="field"><label>Montant</label><input id="fee-amount" type="number" /></div>
+- `static/finance.html:44` — <button class="btn" onclick="createFeeStructure()">Ajouter</button>
+- `static/finance.html:48` — <thead><tr><th>Libellé</th><th>Type</th><th>Montant</th></tr></thead>
+- `static/finance.html:57` — <div class="field"><label>Rechercher un élève</label><input id="student-search" placeholder="nom, prénom, matricule" onkeydown="if(event.key==='Enter') searchStudents()" /></div>
+- `static/finance.html:58` — <button class="btn" onclick="searchStudents()">Rechercher</button>
+- `static/finance.html:65` — <h3 id="student-detail-title">Élève sélectionné</h3>
+- `static/finance.html:67` — <h4 style="font-family:var(--font-brand); color:var(--primary); font-size:13px;">Nouvelle facture</h4>
+- `static/finance.html:69` — <div class="field"><label>Frais</label><select id="invoice-fee"></select></div>
+- `static/finance.html:70` — <div class="field"><label>Montant dû</label><input id="invoice-amount" type="number" /></div>
+- `static/finance.html:71` — <div class="field"><label>Remise</label><input id="invoice-discount" type="number" value="0" /></div>
+- `static/finance.html:72` — <div class="field"><label>Échéance</label><input id="invoice-due" type="date" /></div>
+- `static/finance.html:73` — <button class="btn" onclick="createInvoice()">Créer la facture</button>
+- `static/finance.html:79` — <h3>Factures</h3>
+- `static/finance.html:81` — <thead><tr><th>ID</th><th>Montant dû</th><th>Remise</th><th>Statut</th></tr></thead>
+- `static/finance.html:87` — <h4 style="font-family:var(--font-brand); color:var(--primary); font-size:13px; margin-top:0;">Enregistrer un paiement</h4>
+- `static/finance.html:89` — <div class="field"><label>Facture</label><select id="payment-invoice"></select></div>
+- `static/finance.html:90` — <div class="field"><label>Montant</label><input id="payment-amount" type="number" /></div>
+- `static/finance.html:91` — <div class="field"><label>Moyen</label>
+- `static/finance.html:93` — <option value="cash">Espèces</option><option value="transfer">Virement</option>
+- `static/finance.html:94` — <option value="check">Chèque</option><option value="mobile_money">Mobile Money</option>
+- `static/finance.html:95` — <option value="other">Autre</option>
+- `static/finance.html:98` — <button class="btn" onclick="recordPayment()">Enregistrer</button>
+- `static/finance.html:102` — <h3>Paiements</h3>
+- `static/finance.html:104` — <thead><tr><th>Reçu</th><th>Montant</th><th>Moyen</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+- `static/finance.html:113` — <footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+- `static/finance.html:134` — : `<tr><td colspan="3"><div class="empty-state">Aucun frais configuré pour cette année.</div></td></tr>`;
+- `static/finance.html:167` — ? `<table class="sigma-table"><thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Classe</th><th></th></tr></thead><tbody>` +
+- `static/finance.html:169` — <td><button class="btn ghost sm" data-select-student="${encodeURIComponent(JSON.stringify(s))}">Sélectionner</button></td></tr>`).join("") +
+- `static/finance.html:171` — : `<div class="empty-state">Aucun résultat.</div>`;
+- `static/finance.html:212` — : `<tr><td colspan="4"><div class="empty-state">Aucune facture pour cet élève.</div></td></tr>`;
+- `static/finance.html:245` — <td>${p.is_cancelled ? '<span class="badge red">Annulé</span>' : '<span class="badge green">Valide</span>'}</td>
+- `static/finance.html:247` — <button class="btn ghost sm" data-payment-receipt="${Number(p.id)}" data-receipt-number="${Sigma.escapeHtml(p.receipt_number || "recu")}">Reçu PDF</button>
+- `static/finance.html:248` — ${!p.is_cancelled ? `<button class="btn danger sm" onclick="cancelPayment(${p.id})">Annuler</button>` : ""}
+- `static/finance.html:251` — : `<tr><td colspan="6"><div class="empty-state">Aucun paiement enregistré.</div></td></tr>`;
+- `static/ai-control.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA Intelligence — Centre de contrôle</title><link rel="icon" href="/dashboard/assets
+- `static/ai-control.html:4` — .head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.sub,.muted{color:#64748b}.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.card{background:#fff;bo
+- `static/ai-control.html:9` — function renderProposal(x){const status=String(x.status||'');let buttons='';if(status==='proposed')buttons=`<button class="btn sm" onclick="approve(${Number(x.id)})">✓ Approuver</button><button class="btn ghost sm" oncli
+- `static/ai-control.html:10` — async function load(){try{const d=await Sigma.api('/api/ai/actions/control-center?limit=50');document.getElementById('scope').textContent=d.scope.superadmin?'Périmètre : tous les établissements (superadmin)':`Périmètre :
+- `static/honor-board.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Tableau d’honneur</title><link rel="stylesheet" href="/dashboard/assets/sigma.c
+- `static/student360.html:1` — <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Élève 360</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/student360.html:5` — </style></head><body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="display:none"><div class="sigma-main"><h2 class="page-title">Élève 360</h2><p class="page-subtitle">Une vue lon
+- `static/student360.html:13` — <div class="mini-grid"><div class="mini-card"><div class="n">${grades.length}</div><div class="l">Évaluations récentes</div></div><div class="mini-card"><div class="n">${reports.length}</div><div class="l">Bulletins</div
+- `static/student360.html:14` — <div class="tabs"><button class="active" onclick="showTab('overview',this)">Synthèse</button><button onclick="showTab('pedagogy',this)">Pédagogie</button><button onclick="showTab('attendance',this)">Présence</button><but
+- `static/student360.html:15` — <div id="tab-overview" class="tab-content"><div class="section-grid"><div class="panel"><h3>Responsables</h3><table class="sigma-table"><thead><tr><th>Nom</th><th>Lien</th><th>Téléphone</th><th>Principal</th></tr></thead
+- `static/student360.html:16` — <div id="tab-pedagogy" class="tab-content" style="display:none"><div class="panel"><h3>Résultats récents</h3><table class="sigma-table"><thead><tr><th>Évaluation</th><th>Note</th><th>État</th><th>Appréciation</th></tr></
+- `static/student360.html:17` — <div id="tab-attendance" class="tab-content" style="display:none"><div class="panel"><h3>Présence récente</h3><table class="sigma-table"><thead><tr><th>Date</th><th>Statut</th><th>Justifiée</th><th>Motif</th></tr></thead
+- `static/student360.html:18` — <div id="tab-finance" class="tab-content" style="display:none"><div class="section-grid"><div class="panel"><h3>Factures</h3><table class="sigma-table"><thead><tr><th>ID</th><th>Échéance</th><th>Montant dû</th><th>État</
+- `static/student360.html:19` — <div id="tab-admin" class="tab-content" style="display:none"><div class="section-grid"><div class="panel"><h3>Identité</h3><div class="form-grid"><div><b>Nom</b><br>${esc(s.last_name)}</div><div><b>Prénom</b><br>${esc(s.
+- `static/ai-knowledge.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA Intelligence — Base documentaire</title><link rel="icon" href="/dashboard/assets/
+- `static/ai-knowledge.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"><style>body{padding:24px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}.layout{display:grid;grid-template-column
+- `static/ai-knowledge.html:4` — const esc = (s) => String(s ?? '').replace(/[&<>"\']/g, (m) => ({
+- `static/ai-knowledge.html:67` — : '<div class="muted">Aucun passage pertinent.</div>';
+- `static/ai-knowledge.html:77` — ? data.map((x) => `<div style="margin:8px 0"><strong>${esc(x.title)}</strong> — v${esc(x.version || '—')} · ${Number(x.chunk_count || 0)} fragment(s) · ${esc(x.status || 'published')} · ${x.is_active ? 'actif' : 'inactif
+- `static/index.html:6` — <title>SIGMA — Tableau de bord</title>
+- `static/index.html:19` — <h2 class="page-title">Tableau de bord</h2>
+- `static/index.html:20` — <p class="page-subtitle">Vue d'ensemble dynamique de l'établissement — auto-actualisée toutes les 30 secondes</p>
+- `static/index.html:27` — <div class="panel-heading"><div><h3>À traiter maintenant</h3><p class="panel-hint">Les priorités de direction, avec accès direct à l'action.</p></div><span id="action-total" class="action-total">0</span></div>
+- `static/index.html:33` — <h3>Effectif par niveau</h3>
+- `static/index.html:37` — <h3>Alertes intelligentes</h3>
+- `static/index.html:44` — <h3>Évolution de la moyenne (classe sélectionnée)</h3>
+- `static/index.html:48` — <h3>Actions rapides</h3><p>Accès rapide aux modules opérationnels.</p><button class="btn" onclick="location.href='/dashboard/students.html'">Gérer les élèves</button> <button class="btn ghost" onclick="location.href='/da
+- `static/index.html:54` — <footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+- `static/index.html:60` — async function refreshAll(){const c=Sigma.context.get();if(!c.school_id)return;try{const base=`school_id=${c.school_id}&academic_year_id=${c.academic_year_id||''}&academic_period_id=${c.academic_period_id||''}`;const [su
+- `static/index.html:63` — function renderEffectif(rows){const el=document.getElementById('effectif-chart');if(!rows.length){el.innerHTML='<div class="empty-state">Aucune donnée.</div>';return}Sigma.renderDonut('effectif-chart',rows.map(r=>({label
+- `static/index.html:64` — function renderEvolution(rows){const el=document.getElementById('evolution-chart');if(!rows.length){el.innerHTML='<div class="empty-state">Sélectionnez une classe pour voir son évolution.</div>';return}el.innerHTML=rows.
+- `static/pilot.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Pilote école</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/pilot.html:4` — <body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="display:none"><div class="wrap"><h1>🏫 SIGMA — Pilote école</h1><p class="small">Assistant de préparation et de contrôle avant 
+- `static/pilot.html:5` — <div class="card"><label>School ID <input id="school" type="number" min="1"></label> <button onclick="refresh()">Actualiser</button></div>
+- `static/pilot.html:6` — <div id="summary" class="card">Connexion requise.</div>
+- `static/pilot.html:7` — <div class="card"><h2>Préparer le pilote</h2><p class="small">Cette opération configure l'année scolaire, les périodes, les profils RBAC et crée une première sauvegarde de sécurité.</p><div class="grid"><input id="year" 
+- `static/pilot.html:10` — async function refresh(){const id=sid();if(!id)return;try{const d=await Sigma.api(`/api/pilot/${id}/readiness`);let checks=Object.entries(d.checks).map(([k,v])=>`<div class="check ${v?'ok':'bad'}">${v?'✓':'✗'} ${Sigma.es
+- `static/administration.html:6` — <title>SIGMA — Administration</title>
+- `static/administration.html:18` — <h2 class="page-title">Administration</h2>
+- `static/administration.html:19` — <p class="page-subtitle">Structure de l'établissement, utilisateurs, postes &amp; permissions, journal d'audit</p>
+- `static/administration.html:24` — <button class="tab-btn active" data-tab="structure">Structure</button>
+- `static/administration.html:25` — <button class="tab-btn" data-tab="users">Utilisateurs &amp; postes</button>
+- `static/administration.html:26` — <button class="tab-btn" data-tab="delegations">Délégations</button>
+- `static/administration.html:27` — <button class="tab-btn" data-tab="audit">Journal d'audit</button>
+- `static/administration.html:28` — <button class="tab-btn" data-tab="backups">Sauvegardes</button>
+- `static/administration.html:35` — <h3>Nouvel établissement</h3>
+- `static/administration.html:37` — <div class="field"><label>Nom</label><input id="school-name" placeholder="ex: Lycée Excellence" /></div>
+- `static/administration.html:38` — <div class="field"><label>Sigle</label><input id="school-short" /></div>
+- `static/administration.html:39` — <div class="field"><label>Langue</label><select id="school-lang"><option value="fr">Français</option><option value="en">English</option></select></div>
+- `static/administration.html:40` — <div class="field"><label>Devise</label><input id="school-currency" value="XAF" /></div><div class="field"><label>Téléphone 2</label><input id="school-phone2" /></div><div class="field"><label>Téléphone 1</label><input i
+- `static/administration.html:42` — <button class="btn" onclick="createSchool()">Créer l'établissement</button>
+- `static/administration.html:47` — <h3>Nouvelle année scolaire</h3>
+- `static/administration.html:49` — <div class="field"><label>Libellé</label><input id="year-label" placeholder="2026/2027" /></div>
+- `static/administration.html:50` — <div class="field"><label>Début</label><input id="year-start" type="date" /></div>
+- `static/administration.html:51` — <div class="field"><label>Fin</label><input id="year-end" type="date" /></div>
+- `static/administration.html:53` — <label style="font-size:13px;"><input type="checkbox" id="year-current" /> Année en cours</label><br/><br/>
+- `static/administration.html:54` — <button class="btn" onclick="createYear()">Créer l'année</button>
+- `static/administration.html:61` — <h3>Nouvelle période</h3>
+- `static/administration.html:63` — <div class="field"><label>Nom</label><input id="period-name" placeholder="Trimestre 1" /></div>
+- `static/administration.html:64` — <div class="field"><label>Ordre</label><input id="period-order" type="number" value="1" /></div>
+- `static/administration.html:65` — <div class="field"><label>Début</label><input id="period-start" type="date" /></div>
+- `static/administration.html:66` — <div class="field"><label>Fin</label><input id="period-end" type="date" /></div>
+- `static/administration.html:68` — <button class="btn" onclick="createPeriod()">Créer la période</button>
+- `static/administration.html:73` — <h3>Niveaux &amp; séries</h3>
+- `static/administration.html:74` — <p class="muted" style="font-size:12px;">Vous pouvez maintenant <b>modifier</b> ou <b>désactiver</b> une création faite par erreur. Une désactivation conserve l’historique.</p>
+- `static/administration.html:76` — <div class="field"><label>Nouveau niveau</label><input id="level-name" placeholder="ex: 3e" /></div>
+- `static/administration.html:77` — <button class="btn ghost sm" onclick="createLevel()">Ajouter</button>
+- `static/administration.html:80` — <div class="field"><label>Nouvelle série</label><input id="stream-name" placeholder="ex: Scientifique" /></div>
+- `static/administration.html:81` — <button class="btn ghost sm" onclick="createStream()">Ajouter</button>
+- `static/administration.html:88` — <h3>Nouvelle classe</h3>
+- `static/administration.html:90` — <div class="field"><label>Niveau</label><select id="class-level"></select></div>
+- `static/administration.html:91` — <div class="field"><label>Série (optionnel)</label><select id="class-stream"><option value="">—</option></select></div>
+- `static/administration.html:92` — <div class="field"><label>Nom</label><input id="class-name" placeholder="ex: 3e A" /></div>
+- `static/administration.html:93` — <div class="field"><label>Capacité</label><input id="class-capacity" type="number" /></div>
+- `static/administration.html:95` — <button class="btn" onclick="createClass()">Créer la classe</button>
+- `static/administration.html:98` — <thead><tr><th>Nom</th><th>État</th><th>Actions</th></tr></thead>
+- `static/administration.html:108` — <h3>Nouvel utilisateur</h3>
+- `static/administration.html:110` — <div class="field"><label>Identifiant</label><input id="user-username" /></div>
+- `static/administration.html:111` — <div class="field"><label>Prénom</label><input id="user-first" /></div>
+- `static/administration.html:112` — <div class="field"><label>Nom</label><input id="user-last" /></div>
+- `static/administration.html:113` — <div class="field"><label>E-mail</label><input id="user-email" type="email" /></div>
+- `static/administration.html:114` — <div class="field"><label>Mot de passe</label><input id="user-password" type="password" /></div>
+- `static/administration.html:116` — <button class="btn" onclick="createUser()">Créer l'utilisateur</button>
+- `static/administration.html:119` — <thead><tr><th>Identifiant</th><th>Nom</th></tr></thead>
+- `static/administration.html:125` — <h3>Nouveau poste</h3>
+- `static/administration.html:127` — <div class="field"><label>Nom</label><input id="post-name" placeholder="ex: Enseignant" /></div>
+- `static/administration.html:128` — <button class="btn ghost sm" onclick="createPost()">Créer</button>
+- `static/administration.html:131` — <thead><tr><th>Poste</th><th></th></tr></thead>
+- `static/administration.html:138` — <h3 id="post-permissions-title">Permissions du poste</h3>
+- `static/administration.html:140` — <div class="field"><label>Permission</label><select id="permission-select"></select></div>
+- `static/administration.html:141` — <button class="btn ghost sm" onclick="assignPermission()">Attribuer (tout l'établissement)</button>
+- `static/administration.html:144` — <thead><tr><th>Permission</th><th>Périmètre</th><th></th></tr></thead>
+- `static/administration.html:150` — <h3>Affecter un utilisateur à un poste</h3>
+- `static/administration.html:152` — <div class="field"><label>Utilisateur</label><select id="assign-user"></select></div>
+- `static/administration.html:153` — <div class="field"><label>Poste</label><select id="assign-post"></select></div>
+- `static/administration.html:154` — <button class="btn" onclick="assignUserToPost()">Affecter</button>
+- `static/administration.html:163` — <h3>Nouvelle délégation temporaire</h3>
+- `static/administration.html:164` — <p style="font-size:12px; color:var(--text-muted);">Ex: Mme X est absente — le directeur délègue à M. Y la saisie des notes de mathématiques du 10/09 au 15/09.</p>
+- `static/administration.html:166` — <div class="field"><label>Accordée par</label><select id="del-from"></select></div>
+- `static/administration.html:167` — <div class="field"><label>Accordée à</label><select id="del-to"></select></div>
+- `static/administration.html:168` — <div class="field"><label>Permission</label><select id="del-permission"></select></div>
+- `static/administration.html:171` — <div class="field"><label>Motif</label><input id="del-reason" /></div>
+- `static/administration.html:173` — <button class="btn" onclick="createDelegation()">Créer la délégation</button>
+- `static/administration.html:181` — <h3 style="margin:0 0 10px;">Paramètres de l'établissement</h3>
+- `static/administration.html:182` — <p class="muted" style="font-size:12px;margin:0 0 10px;">Coordonnées, format du matricule et canal de communication par défaut.</p>
+- `static/administration.html:184` — <div class="field"><label>Téléphone principal</label><input id="settings-phone" placeholder="+237 6XX XX XX XX" /></div>
+- `static/administration.html:185` — <div class="field"><label>Téléphone secondaire</label><input id="settings-phone2" placeholder="+237 6XX XX XX XX" /></div>
+- `static/administration.html:186` — <div class="field"><label>E-mail</label><input id="settings-email" type="email" /></div>
+- `static/administration.html:187` — <div class="field"><label>Stratégie de matricule</label>
+- `static/administration.html:189` — <option value="sequence">Séquence simple</option>
+- `static/administration.html:190` — <option value="year_sequence">Année + séquence</option>
+- `static/administration.html:191` — <option value="year_level_sequence">Année + niveau + séquence</option>
+- `static/administration.html:192` — <option value="school_year_sequence">Établissement + année + séquence</option>
+- `static/administration.html:193` — <option value="custom">Personnalisé (gabarit ci-dessous)</option>
+- `static/administration.html:196` — <div class="field"><label>Gabarit personnalisé</label><input id="settings-matricule-template" placeholder="{YY}{SEQ:05}" data-tip="Utilisé seulement si stratégie = Personnalisé. Ex: {YY} = année sur 2 chiffres, {SEQ:05} 
+- `static/administration.html:197` — <div class="field"><label>Canal de communication par défaut</label>
+- `static/administration.html:199` — <option value="sms">SMS (boîtier GSM)</option>
+- `static/administration.html:200` — <option value="app">Application mobile</option>
+- `static/administration.html:201` — <option value="both">Les deux</option>
+- `static/administration.html:205` — <button class="btn" onclick="saveSchoolSettings()">Enregistrer les paramètres</button>
+- `static/administration.html:210` — <h3 style="margin:0 0 10px;">Licence / abonnement</h3>
+- `static/administration.html:211` — <div id="subscription-box" style="font-size:13px;">Chargement…</div>
+- `static/administration.html:213` — <div class="field" style="flex:2;"><label>Clé de licence reçue de SIGMA</label>
+- `static/administration.html:217` — <button class="btn" onclick="activateLicenseKey()">Activer la licence</button>
+- `static/administration.html:219` — <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Cette clé vous est transmise par SIGMA après règlement de votre abonnement. Elle prolonge ou met à niveau automatiquement le plan de cet établissement.</p
+- `static/administration.html:224` — <div><h3 style="margin:0;">Cloud de sauvegarde</h3><p style="font-size:12px;color:var(--text-muted);">Chaque sauvegarde réussie est aussi envoyée vers les comptes cloud actifs ci-dessous.</p></div>
+- `static/administration.html:227` — <div class="field"><label>Fournisseur</label>
+- `static/administration.html:229` — <option value="google_drive">Google Drive</option>
+- `static/administration.html:230` — <option value="onedrive">OneDrive</option>
+- `static/administration.html:231` — <option value="dropbox">Dropbox</option>
+- `static/administration.html:234` — <div class="field"><label>Nom (ex: Drive principal)</label><input id="cloud-label" /></div>
+- `static/administration.html:235` — <div class="field"><label>Dossier cible</label><input id="cloud-folder" value="/SIGMA" /></div>
+- `static/administration.html:236` — <div class="field" style="flex:2;"><label>Jeton d'accès</label><input id="cloud-token" type="password" data-tip="Générez ce jeton depuis la console développeur du fournisseur (Google Cloud Console, Microsoft Entra, Dropb
+- `static/administration.html:238` — <button class="btn ghost sm" onclick="addCloudDestination()">Connecter ce compte</button>
+- `static/administration.html:241` — <thead><tr><th>Fournisseur</th><th>Nom</th><th>Dossier</th><th>Dernière synchro</th><th>Actions</th></tr></thead>
+- `static/administration.html:248` — <div><h3 style="margin:0;">Sauvegardes de sécurité</h3><p style="font-size:12px;color:var(--text-muted);">La sauvegarde inclut la base SIGMA et les médias élèves.</p></div>
+- `static/administration.html:249` — <button class="btn" onclick="createBackup()">Créer une sauvegarde maintenant</button>
+- `static/administration.html:253` — <h4 style="margin:0 0 8px;">Restauration sécurisée</h4>
+- `static/administration.html:254` — <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Le fichier est contrôlé, une sauvegarde de sécurité est créée, puis la restauration est appliquée au prochain redémarrage du serveur SIGMA.</p>
+- `static/administration.html:256` — <div class="field" style="flex:1;"><label>Archive SIGMA (.zip)</label><input id="restore-file" type="file" accept=".zip,application/zip" /></div>
+- `static/administration.html:257` — <button class="btn" onclick="prepareRestore()">Préparer la restauration</button>
+- `static/administration.html:258` — <button class="btn ghost sm" onclick="loadRestoreStatus()">Actualiser l'état</button>
+- `static/administration.html:264` — <thead><tr><th>Fichier</th><th>Date</th><th>Taille</th><th></th></tr></thead>
+- `static/administration.html:274` — <h3 style="margin:0;">Journal d'audit (non modifiable)</h3>
+- `static/administration.html:275` — <button class="btn ghost sm" onclick="loadAuditLogs()">Actualiser</button>
+- `static/administration.html:278` — <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Entité</th><th>Détail</th></tr></thead>
+- `static/administration.html:286` — <footer class="sigma-footer">SIGMA — Système Intégré de Gestion et Management Académique</footer>
+- `static/administration.html:368` — ? "Niveaux : " + levels.map(l => `<span class="badge ${l.is_active?'blue':'grey'}" style="margin-right:4px;">${escapeHtml(l.name)} ${l.is_active?'':'(désactivé)'}</span> <button class="btn ghost sm" onclick="editLevel(${
+- `static/administration.html:369` — : `<span class="empty-state">Aucun niveau créé.</span>`;
+- `static/administration.html:371` — ? "Séries : " + streams.map(s => `<span class="badge ${s.is_active?'blue':'grey'}" style="margin-right:4px;">${escapeHtml(s.name)} ${s.is_active?'':'(désactivée)'}</span> <button class="btn ghost sm" onclick="editStream(
+- `static/administration.html:372` — : `<span class="empty-state">Aucune série créée.</span>`;
+- `static/administration.html:420` — ? classes.map(c => {const lv=levels.find(x=>x.id===c.level_id)?.name||'—';const st=streams.find(x=>x.id===c.stream_id)?.name||'—';return `<tr><td><b>${escapeHtml(c.name)}</b><div class="muted">${escapeHtml(lv)}${st!=='—'
+- `static/administration.html:421` — : `<tr><td colspan="3"><div class="empty-state">Aucune classe pour cette année.</div></td></tr>`;
+- `static/administration.html:431` — : `<tr><td colspan="2"><div class="empty-state">Aucun utilisateur.</div></td></tr>`;
+- `static/administration.html:460` — ? allPosts.map(p => `<tr><td>${escapeHtml(p.name)}</td><td><button class="btn ghost sm" data-post-id="${Number(p.id)}">Gérer les permissions</button></td></tr>`).join("")
+- `static/administration.html:461` — : `<tr><td colspan="2"><div class="empty-state">Aucun poste.</div></td></tr>`;
+- `static/administration.html:497` — <td><button class="btn danger sm" onclick="removePostPermission(${l.id})">Retirer</button></td></tr>`).join("")
+- `static/administration.html:498` — : `<tr><td colspan="3"><div class="empty-state">Aucune permission attribuée à ce poste.</div></td></tr>`;
+- `static/administration.html:562` — document.getElementById("backups-body").innerHTML = rows.length ? rows.map(b => `<tr><td>${esc(b.name)}</td><td>${new Date(b.created_at).toLocaleString("fr-FR")}</td><td>${Math.round(b.size/1024)} Ko</td><td>${b.valid ==
+- `static/administration.html:623` — <div><strong>Plan</strong><br/>${esc(s.plan)}</div>
+- `static/administration.html:624` — <div><strong>Statut</strong><br/>${esc(statusLabel)}${s.days_remaining != null ? ` (${s.days_remaining} j restants)` : ""}</div>
+- `static/administration.html:625` — <div><strong>Utilisateurs</strong><br/>${s.usage.users} / ${s.limits.users}</div>
+- `static/administration.html:626` — <div><strong>Élèves</strong><br/>${s.usage.students} / ${s.limits.students}</div>
+- `static/administration.html:658` — <td><button class="btn ghost sm" onclick="testCloudDestination(${d.id})">Tester</button> <button class="btn ghost sm" onclick="deleteCloudDestination(${d.id})">Supprimer</button></td>
+- `static/administration.html:659` — </tr>`).join("") : `<tr><td colspan="5"><div class="empty-state">Aucun compte cloud connecté.</div></td></tr>`;
+- `static/administration.html:706` — actions.innerHTML = '<button class="btn ghost sm" onclick="cancelRestore()">Annuler la restauration en attente</button>';
+- `static/administration.html:749` — : `<tr><td colspan="5"><div class="empty-state">Aucune entrée d'audit.</div></td></tr>`;
+- `static/teacher.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Espace Enseignant</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/teacher.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"><link rel="manifest" href="/dashboard/manifest.webmanifest"></head><body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="d
+- `static/change-password.html:1` — <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Changer le mot de passe</title><link rel="icon" href="/dashboard/assets/favicon
+- `static/change-password.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"></head><body><main class="sigma-main" style="max-width:620px;margin:60px auto"><div class="panel"><h2>🔐 Sécurisation du compte</h2><p>Pour continuer, définissez u
+- `static/communication.html:1` — <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Communication</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/communication.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"></head><body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="display:none"><div class="sigma-main"><h2 class="page-title">
+- `static/communication.html:4` — async function loadTargetOptions(){const ctx=Sigma.context.get(),type=document.getElementById('target-type').value,wrap=document.getElementById('target-wrap'); if(type==='school'){wrap.style.display='none';return} wrap.s
+- `static/communication.html:6` — async function loadLogs(){const ctx=Sigma.context.get();const logs=await Sigma.api(`/api/sms/logs?school_id=${ctx.school_id}`);document.getElementById('logs-body').innerHTML=logs.map(l=>{const status=String(l.status||'')
+- `static/insight.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA Insight</title><link rel="icon" href="/dashboard/assets/favicon.ico">
+- `static/insight.html:5` — </style></head><body><div id="sigma-header"></div><div id="login-screen"></div><main id="main-screen" style="display:none"><div class="sigma-main"><div class="insight-head"><div><h1>SIGMA INSIGHT</h1><div class="sub">Déc
+- `static/insight.html:8` — async function load(){try{const p=new URLSearchParams(location.search),ctx=Sigma.context.get();let school=p.get('school_id')||ctx.school_id;if(!school){document.getElementById('scope').textContent='Aucun établissement sé
+- `static/forgot-password.html:1` — <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Mot de passe oublié</title><link rel="icon" href="/dashboard/assets/favicon.ico
+- `static/forgot-password.html:3` — <link rel="stylesheet" href="/dashboard/assets/sigma.css"></head><body><main class="sigma-main" style="max-width:620px;margin:60px auto"><div class="panel"><h2>📩 Mot de passe oublié</h2><p>Saisissez votre identifiant ou 
+- `static/evaluations.html:1` — <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGMA — Évaluations & Carnets</title><link rel="icon" href="/dashboard/assets/favicon.i
+- `static/evaluations.html:5` — <section class="page-head"><div><h2>Évaluations & Carnets</h2><p class="muted">Maternelle & primaire — évaluation par compétences, observations et bilans trimestriels.</p></div></section>
+- `static/evaluations.html:7` — <section class="card"><h3>1. Référentiel</h3><div class="form-grid"><label>École ID<input id="school-id" type="number"></label><label>Année ID<input id="year-id" type="number"></label></div><button class="btn" onclick="l
+- `static/evaluations.html:8` — <section class="card"><h3>2. Activité d'évaluation</h3><div class="form-grid"><label>Classe ID<input id="class-id" type="number"></label><label>Période ID<input id="period-id" type="number"></label></div><div class="form
+- `static/evaluations.html:10` — <section class="card" id="teacher-workspace"><div class="section-head"><div><h3>3. SIGMA Enseignant</h3><p class="muted">Pilotez la séance, complétez les évaluations et repérez immédiatement les élèves à accompagner.</p>
+- `static/evaluations.html:11` — <section class="card"><div class="section-head"><h3>4. Activités de la classe</h3><button class="btn ghost" onclick="loadActivities()">Actualiser</button></div><table><thead><tr><th>Activité</th><th>Type</th><th>Mode</th
+- `static/evaluations.html:12` — <section class="card" id="results-panel" style="display:none"><div class="section-head"><h3 id="results-title">Saisie</h3><div><button class="btn ghost" onclick="showOfflineConflicts()">Conflits</button> <button class="b
+- `static/evaluations.html:13` — <section class="card"><div class="section-head"><h3>5. Configuration pédagogique</h3><button class="btn ghost" onclick="refreshFrameworkTree()">Actualiser</button></div><p class="muted">Le référentiel est configurable sa
+- `static/evaluations.html:14` — <section class="card"><h3>6. Générer les carnets</h3><div class="form-grid"><label>Élève ID<input id="student-id" type="number"></label><label>Framework ID<input id="report-framework-id" type="number"></label><label>Péri
+- `static/evaluations.html:23` — async function loadTeacherWorkspace(){const cid=Number(classId().value),pid=Number(periodId().value);if(!cid||!pid)return;try{const w=await Sigma.api(`/api/evaluation/classes/${cid}/teacher-workspace?academic_period_id=$
+- `static/evaluations.html:25` — async function loadActivities(){const cid=Number(classId().value),pid=Number(periodId().value);if(!cid||!pid)return;const rows=await Sigma.api(`/api/evaluation/activities?class_id=${cid}&academic_period_id=${pid}`);docum
+- `static/evaluations.html:32` — async function refreshFrameworkTree(){const id=Number(document.getElementById('framework').value);if(!id)return;const f=await Sigma.api(`/api/evaluation/frameworks/${id}`);document.getElementById('cfg-domain-select').inn
+- `static/cards.html:6` — <title>SIGMA — Cartes</title>
+- `static/cards.html:18` — <h2 class="page-title">Cartes d'accès</h2>
+- `static/cards.html:19` — <p class="page-subtitle">Modèles de carte, émission, révocation, impression avec QR code</p>
+- `static/cards.html:25` — <h3>Modèles de carte</h3>
+- `static/cards.html:27` — <div class="field"><label>Nom</label><input id="template-name" placeholder="ex: Carte scolaire standard" /></div>
+- `static/cards.html:28` — <div class="field"><label>Type</label>
+- `static/cards.html:29` — <select id="template-type"><option value="student_id">Élève</option><option value="staff_id">Personnel</option></select>
+- `static/cards.html:31` — <div class="field"><label>Couleur principale</label><input id="template-primary" type="color" value="#11633A" /></div>
+- `static/cards.html:32` — <div class="field"><label>Couleur accent</label><input id="template-accent" type="color" value="#FF8A00" /></div>
+
+## Notes
+- Dynamic business values are not to be blindly translated.
+- Keys must remain stable; FR is the runtime fallback for missing EN where appropriate.
+- This inventory is a worklist, not a claim that all 919 historical literals are still present or need translation.

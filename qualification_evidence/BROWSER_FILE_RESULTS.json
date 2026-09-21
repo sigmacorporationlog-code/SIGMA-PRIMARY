@@ -1,0 +1,170 @@
+[
+  {
+    "page": "academic.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/academic.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/academic.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "administration.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/administration.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/administration.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "ai-control.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/ai-control.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/ai-control.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "ai-knowledge.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/ai-knowledge.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/ai-knowledge.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "cards.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/cards.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/cards.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "change-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/change-password.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/change-password.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "communication.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/communication.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/communication.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "evaluations.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/evaluations.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/evaluations.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "finance.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/finance.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/finance.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "forgot-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/forgot-password.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/forgot-password.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "honor-board.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/honor-board.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/honor-board.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "index.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/index.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/index.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "insight.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/insight.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/insight.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "licenses.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/licenses.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/licenses.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "operations.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/operations.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/operations.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "parent.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/parent.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/parent.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "pilot.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/pilot.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/pilot.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "reset-password.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/reset-password.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/reset-password.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "student360.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/student360.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/student360.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "students.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/students.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/students.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  },
+  {
+    "page": "teacher.html",
+    "status": "ERROR",
+    "exception": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/real_qualification/workspace/static/teacher.html\nCall log:\n  - navigating to \"file:///mnt/data/real_qualification/workspace/static/teacher.html\", waiting until \"load\"\n",
+    "console": [],
+    "page_errors": [],
+    "bad_responses": []
+  }
+]
