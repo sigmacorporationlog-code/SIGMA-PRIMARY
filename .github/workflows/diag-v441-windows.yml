@@ -21,6 +21,60 @@ jobs:
         shell: pwsh
         run: |
           python tools/diagnostics/bisect_v441_windows.py
+      - name: Direct V441 alone run 1
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          python -m pytest -vv -s --disable-warnings tests/test_v441_update_agent.py::test_update_manifest_generator
+          "exit=$LASTEXITCODE" | Out-File direct-v441-1.txt -Encoding utf8
+          exit 0
+      - name: Direct V441 alone run 2
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          python -m pytest -vv -s --disable-warnings tests/test_v441_update_agent.py::test_update_manifest_generator
+          "exit=$LASTEXITCODE" | Out-File direct-v441-2.txt -Encoding utf8
+          exit 0
+      - name: Direct V441 alone run 3
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          python -m pytest -vv -s --disable-warnings tests/test_v441_update_agent.py::test_update_manifest_generator
+          "exit=$LASTEXITCODE" | Out-File direct-v441-3.txt -Encoding utf8
+          exit 0
+      - name: Direct V431-V440 plus V441
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_V431_V440.txt
+          python -m pytest -vv -s --disable-warnings @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-v431-v440.txt -Encoding utf8
+          exit 0
+      - name: Direct left half plus V441
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_LEFT_229.txt
+          python -m pytest -vv -s --disable-warnings @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-left.txt -Encoding utf8
+          exit 0
+      - name: Direct right half plus V441
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_RIGHT_229.txt
+          python -m pytest -vv -s --disable-warnings @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-right.txt -Encoding utf8
+          exit 0
+      - name: Direct full predecessors plus V441
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_PREDECESSORS.txt
+          $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          python -m pytest -vv -s --disable-warnings @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-full.txt -Encoding utf8
+          exit 0
       - name: Upload diagnostic evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -29,4 +83,17 @@ jobs:
           path: |
             V441_PREDECESSOR_TEST_MAP.md
             V441_BISECT_RESULTS.json
+            V441_BISECT_PROGRESS.json
+            V441_PREDECESSORS.txt
+            V441_ONLY.txt
+            V441_V431_V440.txt
+            V441_LEFT_229.txt
+            V441_RIGHT_229.txt
+            direct-v441-1.txt
+            direct-v441-2.txt
+            direct-v441-3.txt
+            direct-v431-v440.txt
+            direct-left.txt
+            direct-right.txt
+            direct-full.txt
           if-no-files-found: warn
