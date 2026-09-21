@@ -1,0 +1,32 @@
+name: SIGMA V441 deterministic diagnostic
+on:
+  push:
+    branches: [diag/v441-isolation-20260921]
+jobs:
+  diagnose:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-build.txt
+      - name: Run deterministic V441 isolation
+        shell: pwsh
+        run: |
+          python tools/diagnostics/bisect_v441_windows.py
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v441-diagnostic-evidence
+          path: |
+            V441_PREDECESSOR_TEST_MAP.md
+            V441_BISECT_RESULTS.json
+          if-no-files-found: warn
