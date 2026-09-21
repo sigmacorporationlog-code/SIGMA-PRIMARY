@@ -8,14 +8,30 @@ PYTEST = [sys.executable, "-m", "pytest"]
 
 def run(cmd, timeout=180):
     t=time.monotonic()
+    kwargs=dict(cwd=ROOT,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL)
+    if os.name == "nt":
+        kwargs["creationflags"]=subprocess.CREATE_NEW_PROCESS_GROUP
+    p=subprocess.Popen(cmd,**kwargs)
     try:
-        p=subprocess.run(cmd,cwd=ROOT,text=True,capture_output=True,timeout=timeout)
+        out,err=p.communicate(timeout=timeout)
         return {"exit_code":p.returncode,"duration":time.monotonic()-t,
-                "stdout":p.stdout,"stderr":p.stderr,"timed_out":False}
+                "stdout":out,"stderr":err,"timed_out":False,"parent_keyboard_interrupt":False,
+                "pid":p.pid}
     except subprocess.TimeoutExpired as e:
-        return {"exit_code":None,"duration":time.monotonic()-t,
-                "stdout":str(e.stdout or "")[-12000:],"stderr":str(e.stderr or "")[-12000:],
-                "timed_out":True}
+        p.kill()
+        out,err=p.communicate()
+        return {"exit_code":p.returncode,"duration":time.monotonic()-t,
+                "stdout":out,"stderr":err,"timed_out":True,"parent_keyboard_interrupt":False,
+                "pid":p.pid}
+    except KeyboardInterrupt:
+        alive=p.poll() is None
+        if alive:
+            p.kill()
+        out,err=p.communicate()
+        return {"exit_code":p.returncode,"duration":time.monotonic()-t,
+                "stdout":out,"stderr":err,"timed_out":False,"parent_keyboard_interrupt":True,
+                "pid":p.pid}
 
 def collect():
     r=run(PYTEST+["--collect-only","-q","--disable-warnings"])
@@ -34,9 +50,12 @@ def collect():
     return ids
 
 def one(ids,label):
+    print(f"START {label} count={len(ids)}", flush=True)
     r=run(PYTEST+["-q","-s","--disable-warnings"]+ids)
-    status="TIMEOUT" if r["timed_out"] else ("PASS" if r["exit_code"]==0 else "FAIL")
-    return {"label":label,"count":len(ids),"status":status,**r}
+    status="TIMEOUT" if r["timed_out"] else ("PARENT_KEYBOARD_INTERRUPT" if r.get("parent_keyboard_interrupt") else ("PASS" if r["exit_code"]==0 else "FAIL"))
+    result={"label":label,"count":len(ids),"status":status,**r}
+    print(f"RESULT {label} status={status} exit={r['exit_code']} duration={r['duration']:.2f}", flush=True)
+    return result
 
 def vnum(x):
     m=re.search(r"test_v(\d+)",Path(x.split("::",1)[0]).name)
@@ -82,7 +101,8 @@ def main():
         a=one(left+[V441],f"bisect-left-{len(active)}")
         b=one(right+[V441],f"bisect-right-{len(active)}")
         bisect += [a,b]
-        failing=[g for g,o in ((left,a),(right,b)) if o["status"]=="FAIL"]
+        Path("V441_BISECT_PROGRESS.json").write_text(json.dumps(bisect,indent=2),encoding="utf-8")
+        failing=[g for g,o in ((left,a),(right,b)) if o["status"] in {"FAIL","PARENT_KEYBOARD_INTERRUPT","TIMEOUT"}]
         if len(failing)==1:
             active=failing[0]
             continue
