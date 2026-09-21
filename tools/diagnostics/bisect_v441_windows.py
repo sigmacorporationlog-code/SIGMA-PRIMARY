@@ -88,6 +88,13 @@ def main():
     pre=ids[:ids.index(V441)]
     print(f"COLLECTION={len(ids)} PREDECESSORS={len(pre)} V441_ORDER={len(pre)+1}")
     static_map(pre)
+    Path("V441_PREDECESSORS.txt").write_text("\n".join(pre)+"\n",encoding="utf-8")
+    Path("V441_ONLY.txt").write_text(V441+"\n",encoding="utf-8")
+    v431_440_for_files=[x for x in pre if 431 <= (vnum(x) or -1) <= 440]
+    Path("V441_V431_V440.txt").write_text("\n".join(v431_440_for_files+[V441])+"\n",encoding="utf-8")
+    mid=len(pre)//2
+    Path("V441_LEFT_229.txt").write_text("\n".join(pre[:mid]+[V441])+"\n",encoding="utf-8")
+    Path("V441_RIGHT_229.txt").write_text("\n".join(pre[mid:]+[V441])+"\n",encoding="utf-8")
     results=[]
     for i in range(3):
         results.append(one([V441],f"V441-alone-{i+1}"))
