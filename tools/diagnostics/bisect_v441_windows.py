@@ -28,6 +28,8 @@ def collect():
         if m:
             ids.append(m.group(1))
     if V441 not in ids:
+        direct=run(PYTEST+["--collect-only","-q","tests/test_v441_update_agent.py"])
+        print("DIRECT_V441_COLLECTION_STDOUT:\n"+direct["stdout"]+"\nDIRECT_V441_COLLECTION_STDERR:\n"+direct["stderr"])
         raise SystemExit("V441 not found in collection")
     return ids
 
