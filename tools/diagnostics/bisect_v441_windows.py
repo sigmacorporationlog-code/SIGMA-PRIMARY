@@ -23,9 +23,10 @@ def collect():
         raise SystemExit("COLLECT FAIL\n"+r["stdout"]+r["stderr"])
     ids=[]
     for line in (r["stdout"]+"\n"+r["stderr"]).splitlines():
-        s=line.strip()
-        if s.startswith("tests/") and "::" in s:
-            ids.append(s)
+        s=line.strip().replace("\\\\","/")
+        m=re.search(r"(tests/[^\\s]+::[^\\s]+)", s)
+        if m:
+            ids.append(m.group(1))
     if V441 not in ids:
         raise SystemExit("V441 not found in collection")
     return ids
