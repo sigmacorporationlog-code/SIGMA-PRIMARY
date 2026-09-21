@@ -1,0 +1,25 @@
+name: SIGMA Debug - Windows Full Suite
+
+on:
+  push:
+    branches:
+      - debug/windows-fullsuite-v446
+  workflow_dispatch:
+
+jobs:
+  suite:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-build.txt
+      - name: Run full suite without pytest stdio capture
+        shell: pwsh
+        run: python -m pytest -vv -s
