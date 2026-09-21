@@ -20,6 +20,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-build.txt
-      - name: Run full suite without pytest stdio capture
+      - name: Run pre-v441 qualification segment
         shell: pwsh
-        run: python -m pytest -vv -s
+        run: |
+          python -m pytest -vv -s `
+            tests/test_v431_postgres_qualification.py `
+            tests/test_v432_windows_qualification.py `
+            tests/test_v433_automation.py `
+            tests/test_v434_resilience.py `
+            tests/test_v435_capacity.py `
+            tests/test_v436_qualification.py `
+            tests/test_v437_qualification.py `
+            tests/test_v438_sla.py `
+            tests/test_v439_incident_automation.py `
+            tests/test_v440_fleet.py
