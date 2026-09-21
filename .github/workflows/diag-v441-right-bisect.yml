@@ -29,7 +29,7 @@ jobs:
           $raw = & $py -m pytest --collect-only -q --disable-warnings
           $ids = @()
           foreach ($line in $raw) {
-            $s = ([string]$line).Trim().Replace("","/")
+            $s = ([string]$line).Trim()
             if ($s -match "^(tests/[^\s]+::[^\s]+)$") { $ids += $matches[1] }
           }
           $v441 = "tests/test_v441_update_agent.py::test_update_manifest_generator"
