@@ -75,6 +75,33 @@ jobs:
           python -m pytest -vv -s --disable-warnings @nodes
           "exit=$LASTEXITCODE" | Out-File direct-full.txt -Encoding utf8
           exit 0
+      - name: Direct exact full suite run 1
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_PREDECESSORS.txt
+          $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          python -m pytest -q --junitxml direct-exact-full-1.xml @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-exact-full-1.txt -Encoding utf8
+          exit 0
+      - name: Direct exact full suite run 2
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_PREDECESSORS.txt
+          $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          python -m pytest -q --junitxml direct-exact-full-2.xml @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-exact-full-2.txt -Encoding utf8
+          exit 0
+      - name: Direct exact full suite run 3
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $nodes = Get-Content V441_PREDECESSORS.txt
+          $nodes += "tests/test_v441_update_agent.py::test_update_manifest_generator"
+          python -m pytest -q --junitxml direct-exact-full-3.xml @nodes
+          "exit=$LASTEXITCODE" | Out-File direct-exact-full-3.txt -Encoding utf8
+          exit 0
       - name: Upload diagnostic evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,4 +123,10 @@ jobs:
             direct-left.txt
             direct-right.txt
             direct-full.txt
+            direct-exact-full-1.txt
+            direct-exact-full-2.txt
+            direct-exact-full-3.txt
+            direct-exact-full-1.xml
+            direct-exact-full-2.xml
+            direct-exact-full-3.xml
           if-no-files-found: warn
