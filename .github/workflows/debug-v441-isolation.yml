@@ -20,6 +20,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-build.txt
+      - name: Direct generator smoke test
+        shell: pwsh
+        run: |
+          $artifact = Join-Path $env:RUNNER_TEMP 'SIGMA-Server.exe'
+          $manifest = Join-Path $env:RUNNER_TEMP 'manifest.json'
+          Set-Content -Path $artifact -Value 'abc' -NoNewline -Encoding ascii
+          python scripts/generate_update_manifest.py $artifact --version 4.41.0 --url https://updates.example/SIGMA-Server.exe --output $manifest
+          if ($LASTEXITCODE -ne 0) { throw 'generate_update_manifest.py direct execution failed' }
+          Get-Content $manifest
       - name: Run isolated regression segment
         shell: pwsh
         run: python -m pytest -vv tests/test_v439_incident_automation.py tests/test_v440_fleet.py tests/test_v441_update_agent.py
